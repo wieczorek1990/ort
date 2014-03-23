@@ -1,0 +1,47 @@
+# encoding: UTF-8
+class Ort
+  DICT = 'pl_PL.dic'
+  ORTS = ['ch', 'h', 'ż', 'rz', 'ó', 'u']
+  CHANGES = {
+    'ch' => 'h', 'h' => 'ch',
+    'ż' => 'rz', 'rz' => 'ż',
+    'ó' => 'u', 'u' => 'ó',
+  }
+  def self.get_word
+    return File.readlines(DICT).sample
+  end
+  def self.get_forms(word)
+    result = []
+    seqs = []
+    for seq in ORTS
+      if word.include?(seq)
+        seqs << seq
+      end
+    end
+    if seqs.include?('h') and seqs.include?('ch')
+      seqs.delete('h')
+    end
+    seqs_size = seqs.size
+    seqs_size = seqs_size > 3 ? 3 : seqs_size
+    seqs.shuffle.first(seqs_size)
+    for i in 0..2**seqs_size - 1
+      l = 0
+      w = word.clone
+      for j in (0..seqs_size).map{ |k| 2**k }
+        if i & j == j
+          seq = seqs[l]
+          w.sub!(seq, CHANGES[seq])
+        end
+        l += 1
+      end
+      result << w.clone
+    end
+    return result.shuffle
+  end
+  def self.print_forms(forms)
+    forms.each_with_index do |form, index|
+      i = index + 1
+      puts i.to_s + ') ' + form
+    end
+  end
+end
