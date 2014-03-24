@@ -1,14 +1,16 @@
 # encoding: UTF-8
 class Ort
-  DICT = 'pl_PL.dic'
+  DICT_PATH = 'pl_PL.dic'
+  DICT = File.readlines(DICT_PATH)
   ORTS = ['ch', 'h', 'ż', 'rz', 'ó', 'u']
   CHANGES = {
     'ch' => 'h', 'h' => 'ch',
     'ż' => 'rz', 'rz' => 'ż',
     'ó' => 'u', 'u' => 'ó',
   }
+  SEQ_MAX = 3
   def self.get_word
-    return File.readlines(DICT).sample
+    return DICT.sample
   end
   def self.get_forms(word)
     result = []
@@ -22,7 +24,7 @@ class Ort
       seqs.delete('h')
     end
     seqs_size = seqs.size
-    seqs_size = seqs_size > 3 ? 3 : seqs_size
+    seqs_size = seqs_size > SEQ_MAX ? SEQ_MAX : seqs_size
     seqs.shuffle.first(seqs_size)
     for i in 0..2**seqs_size - 1
       l = 0
