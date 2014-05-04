@@ -1,6 +1,6 @@
 # encoding: UTF-8
 class Ort
-  DICT_PATH = 'pl_PL.dic'
+  DICT_PATH = File.dirname(__FILE__) + File::SEPARATOR + 'pl_PL.dic'
   DICT = File.readlines(DICT_PATH)
   ORTS = ['ch', 'h', 'ż', 'rz', 'ó', 'u']
   CHANGES = {
