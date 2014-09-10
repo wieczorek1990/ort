@@ -12,7 +12,7 @@ class Ort
     @dict = File.readlines(DICT_PATH)
   end
   def get_word
-    return @dict.sample
+    return @dict.sample.chomp
   end
   def get_forms(word)
     result = []
@@ -38,14 +38,8 @@ class Ort
         end
         l += 1
       end
-      result << w.clone
+      result << w.chomp
     end
     return result.shuffle
-  end
-  def print_forms(forms)
-    forms.each_with_index do |form, index|
-      i = index + 1
-      puts i.to_s + ') ' + form
-    end
   end
 end

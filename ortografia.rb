@@ -1,19 +1,68 @@
 #!/usr/bin/ruby
 # encoding: UTF-8
-# http://pl.wikipedia.org/wiki/Pomoc:Powszechne_b%C5%82%C4%99dy_j%C4%99zykowe
+require 'io/console'
+require 'readline'
 require 'thread'
+require 'yaml'
 require_relative 'ort.rb'
 def clear
   system 'clear'
 end
-def press_any_key
-  puts 'Naciśnij dowolny klawisz, aby kontynuować...'
-  gets
+def cursor(setting)
+  system "setterm -cursor #{setting}"
+end
+def read_char
+  STDIN.echo = false
+  STDIN.raw!
+  input = STDIN.getc.chr
+  if input == "\e" then
+    input << STDIN.read_nonblock(3) rescue nil
+    input << STDIN.read_nonblock(2) rescue nil
+  end
+ensure
+  STDIN.echo = true
+  STDIN.cooked!
+  return input
+end
+def press_to_continue
+  print 'Naciśnij dowolny klawisz, aby kontynuować...'
+  read_char
+end
+def selector(options, before = '', after = '')
+  choice = 0
+  loop do
+    system 'clear'
+    print before
+    options.each_with_index do |line, i|
+      if i != choice
+        puts line
+      else
+        puts line.highlight
+      end
+    end
+    print after
+    c = read_char
+    case c
+      when "\r", ' '
+        return choice
+      when "\e"
+        raise Timeout.new
+      when "\e[A"
+        choice = choice - 1 < 0 ? options.size - 1 : choice - 1
+      when "\e[B"
+        choice = choice + 1 > options.size - 1 ? 0 : choice + 1
+    end
+  end
 end
 class String
   def bold
     "\033[1m#{self}\033[22m"
   end
+  def highlight
+    "\033[7m#{self}\033[27m"
+  end
+end
+class Timeout < Exception
 end
 class Record
   attr_reader :name, :time, :points
@@ -29,131 +78,105 @@ class Record
     @name, @time, @points = array
   end
 end
-ROUND_SECONDS=5*60
 
+config = YAML.load_file 'config.yml'
+ROUND_SECONDS = config['round_seconds']
+INC = config['inc']
+DEC = config['dec']
 ort = Ort.new
 if File.exists?('db')
   records = Marshal.load(File.binread('db'))
 else
   records = []
 end
-reader = nil
+
 loop do
   begin
-    choice = 0
-    loop do
-      clear
-      puts 'Witaj w programie do nauki ortografi!'
-      puts 'Wybierz co chcesz zrobić:'
-      puts '1) Graj'
-      puts '2) Wyniki'
-      puts '3) Wyjście'
-      print 'Wybór: '
-      choice = gets.chomp.to_i
-      if (1..3).include?(choice)
-        break
-      end
-    end
-    if choice == 1
-      time_queue = Queue.new
-      answer_queue = Queue.new
+    cursor 'off'
+    choice = nil
+    choice = selector ['Graj', 'Wyniki', 'Wyjście'], "Witaj w programie do nauki ortografi!\nWybierz co chcesz zrobić:\n"
+    if choice == 0
       points = 0
       good = 0
       bad = 0
       name = ''
       seconds_left = ROUND_SECONDS
+      time_queue = Queue.new
       loop do
-        print 'Podaj swoje imię: '
-        name = gets.chomp
-        if name.length > 2
+        clear
+        cursor 'on'
+        print 'Podaj swój pseudonim: '
+        name = Readline.readline
+        unless name.empty?
+          cursor 'off'
           break
-        else
-          puts 'Niepoprawne imie!'
         end
       end
-      timer = Thread.new {
+      Thread.new do
         while seconds_left > 0
-          sleep 1
-          seconds_left -= 1
           time_queue.clear
           time_queue << seconds_left
+          sleep 1
+          seconds_left -= 1
         end
-        exit
-      }
+        raise Timeout.new
+      end
       loop do
         forms = []
         word = ''
         loop do
           word = ort.get_word
           forms = ort.get_forms(word)
-          if forms.size > 2
+          if forms.size > 1
             break
           end
         end
-        loop do
-          reader = Thread.new {
-            answer = $stdin.gets.chomp.to_i
-            answer_queue.clear
-            answer_queue << answer
-          }
-          clear
-          puts 'Punkty: ' + points.to_s + '. Pozostały czas: ' + Time.at(time_queue.pop).utc.strftime('%M:%S') + '.'
-          puts 'Wybierz poprawnę formę:'
-          ort.print_forms(forms)
-          print 'Odpowiedź: '
-          unless answer_queue.empty?
-            answer = answer_queue.pop
-            unless (1..forms.size).include?(answer)
-              puts 'Zły numer odpowiedzi. Spróbuj ponownie.'
-            else
-              puts word.chomp.bold
-              if forms[answer - 1] == word
-                puts 'Brawo! Wybrałeś poprawną odpowiedź. +2 punkty'
-                points += 2
-                good += 1
-              else
-                puts 'Zła odpowiedź. Musisz się lepiej postarać następnym razem. -1 punkt'
-                points -= 1
-                bad += 1
-              end
-              reader.exit
-              press_any_key
-              break
-            end
-          end
-          sleep 1
-          reader.exit
+        answer = selector forms, "Punkty #{points.to_s}. Pozostały czas: #{Time.at(time_queue.pop).utc.strftime('%M:%S')}.\nWybierz poprawnę formę:\n"
+        if forms[answer] == word
+          puts 'Poprawnie!'
+          points += INC
+          good += 1
+        else
+          puts 'Niepoprawnie. Poprawna odpowiedź to: ' + word.chomp.bold
+          points -= DEC
+          bad += 1
         end
+        press_to_continue
       end
-    elsif choice == 2
+    elsif choice == 1
+      clear
       unless records.empty?
-        puts 'Wyniki'.bold
-        format = "%30s\t%16s\t%5s\n"
-        printf format.bold, 'Imię', 'Kiedy', 'Punkty'
-        records.each do |record|
+        format = "%30s\t|\t%16s\t|\t%5s\n"
+        rows, cols = $stdin.winsize
+        rows = rows - 3
+        printf format, 'Imię', 'Kiedy', 'Punkty'
+        puts '-' * cols
+        many = rows > records.size ? records.size : rows
+        many.times do |i|
+          record = records[i]
           printf format, record.name, record.time.strftime("%Y-%m-%d %H:%M"), record.points
         end
       else
         puts 'Jeszcze tutaj nie grano.'
       end
-      press_any_key
+      press_to_continue
     else
       exit
     end
-  rescue Interrupt, SystemExit
-      if choice == 1
-        reader.exit unless reader.nil?
-        clear
-        puts 'Twój wynik to ' + points.to_s + ' punktów.'
-        puts good.to_s + ' dobrych odpowiedzi oraz ' + bad.to_s + ' złych odpowiedzi.'
-        records << Record.new(name, Time.now, points)
-        records.sort_by! { |o| [o.points, o.time] }
-        records.reverse!
-        File.open('db', 'wb') do |f|
-          f.write(Marshal.dump(records))
-        end
-      elsif choice == 3
-        exit
-      end
+  rescue Timeout
+    if choice.nil?
+      exit
+    end
+    records << Record.new(name, Time.now, points)
+    records.sort_by! { |o| [o.points, o.time] }
+    records.reverse!
+    File.open('db', 'wb') do |f|
+      f.write(Marshal.dump(records))
+    end
+    clear
+    puts 'Twój wynik to ' + points.to_s + ' punktów.'
+    puts good.to_s + ' dobrych odpowiedzi oraz ' + bad.to_s + ' złych odpowiedzi.'
+    cursor 'off'
+    press_to_continue
   end
 end
