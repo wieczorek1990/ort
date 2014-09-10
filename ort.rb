@@ -1,7 +1,6 @@
 # encoding: UTF-8
 class Ort
   DICT_PATH = File.dirname(__FILE__) + File::SEPARATOR + 'pl_PL.dic'
-  DICT = File.readlines(DICT_PATH)
   ORTS = ['ch', 'h', 'ż', 'rz', 'ó', 'u']
   CHANGES = {
     'ch' => 'h', 'h' => 'ch',
@@ -9,10 +8,13 @@ class Ort
     'ó' => 'u', 'u' => 'ó',
   }
   SEQ_MAX = 3
-  def self.get_word
-    return DICT.sample
+  def initialize
+    @dict = File.readlines(DICT_PATH)
   end
-  def self.get_forms(word)
+  def get_word
+    return @dict.sample
+  end
+  def get_forms(word)
     result = []
     seqs = []
     for seq in ORTS
@@ -40,7 +42,7 @@ class Ort
     end
     return result.shuffle
   end
-  def self.print_forms(forms)
+  def print_forms(forms)
     forms.each_with_index do |form, index|
       i = index + 1
       puts i.to_s + ') ' + form
