@@ -31,7 +31,7 @@ end
 def selector(options, before = '', after = '')
   choice = 0
   loop do
-    system 'clear'
+    clear
     print before
     options.each_with_index do |line, i|
       if i != choice
@@ -46,13 +46,21 @@ def selector(options, before = '', after = '')
       when "\r", ' '
         return choice
       when "\e"
-        raise Timeout.new
+        exit
       when "\e[A"
         choice = choice - 1 < 0 ? options.size - 1 : choice - 1
       when "\e[B"
         choice = choice + 1 > options.size - 1 ? 0 : choice + 1
     end
   end
+end
+def sort(records)
+  records.sort! do |a, b|
+    [a.points, b.time] <=> [b.points, a.time]
+  end
+  records.reverse!
+end
+class EndGame < Exception
 end
 class String
   def bold
@@ -61,8 +69,6 @@ class String
   def highlight
     "\033[7m#{self}\033[27m"
   end
-end
-class Timeout < Exception
 end
 class Record
   attr_reader :name, :time, :points
@@ -79,13 +85,17 @@ class Record
   end
 end
 
-config = YAML.load_file 'config.yml'
+DIR = File.dirname(__FILE__) + File::SEPARATOR
+DB_PATH = DIR + 'db'
+CONFIG_PATH = DIR + 'config.yml'
+config = YAML.load_file CONFIG_PATH
 ROUND_SECONDS = config['round_seconds']
+MIN_FORM_SIZE = config['min_form_size']
 INC = config['inc']
 DEC = config['dec']
 ort = Ort.new
-if File.exists?('db')
-  records = Marshal.load(File.binread('db'))
+if File.exists?(DB_PATH)
+  records = Marshal.load(File.binread(DB_PATH))
 else
   records = []
 end
@@ -93,15 +103,12 @@ end
 loop do
   begin
     cursor 'off'
-    choice = nil
-    choice = selector ['Graj', 'Wyniki', 'Wyjście'], "Witaj w programie do nauki ortografi!\nWybierz co chcesz zrobić:\n"
+    choice = selector ['Graj', 'Wyniki', 'Wyjście'], "Witaj w programie do nauki ortografi!\nReguły: dobra odpowiedź - +#{INC}, zła odpowiedź -#{DEC}.\nWybierz co chcesz zrobić:\n"
     if choice == 0
       points = 0
       good = 0
       bad = 0
       name = ''
-      seconds_left = ROUND_SECONDS
-      time_queue = Queue.new
       loop do
         clear
         cursor 'on'
@@ -112,26 +119,22 @@ loop do
           break
         end
       end
-      Thread.new do
-        while seconds_left > 0
-          time_queue.clear
-          time_queue << seconds_left
-          sleep 1
-          seconds_left -= 1
-        end
-        raise Timeout.new
-      end
+      start = Time.now
       loop do
+        seconds_left = ROUND_SECONDS - (Time.now - start)
+        if seconds_left <= 0
+          raise EndGame
+        end
         forms = []
         word = ''
         loop do
           word = ort.get_word
           forms = ort.get_forms(word)
-          if forms.size > 1
+          if forms.size >= MIN_FORM_SIZE
             break
           end
         end
-        answer = selector forms, "Punkty #{points.to_s}. Pozostały czas: #{Time.at(time_queue.pop).utc.strftime('%M:%S')}.\nWybierz poprawnę formę:\n"
+        answer = selector forms, "Punkty #{points.to_s}. Dobre: #{good}. Złe: #{bad}. Pozostały czas: #{Time.at(seconds_left).utc.strftime('%M:%S')}.\nWybierz poprawną formę:\n"
         if forms[answer] == word
           puts 'Poprawnie!'
           points += INC
@@ -146,6 +149,7 @@ loop do
     elsif choice == 1
       clear
       unless records.empty?
+        sort records
         format = "%30s\t|\t%16s\t|\t%5s\n"
         rows, cols = $stdin.winsize
         rows = rows - 3
@@ -163,20 +167,20 @@ loop do
     else
       exit
     end
-  rescue Timeout
-    if choice.nil?
-      exit
-    end
-    records << Record.new(name, Time.now, points)
-    records.sort_by! { |o| [o.points, o.time] }
-    records.reverse!
-    File.open('db', 'wb') do |f|
+  rescue EndGame
+    record = Record.new(name, Time.now, points)
+    records << record
+    sort records
+    File.open(DB_PATH, 'wb') do |f|
       f.write(Marshal.dump(records))
     end
     clear
-    puts 'Twój wynik to ' + points.to_s + ' punktów.'
+    puts 'Twój wynik to: ' + points.to_s + ' punktów.'
     puts good.to_s + ' dobrych odpowiedzi oraz ' + bad.to_s + ' złych odpowiedzi.'
-    cursor 'off'
+    puts 'Jesteś ' + (records.index(record) + 1).to_s + '. na liście rekordów.'
     press_to_continue
+  rescue SystemExit
+    clear
+    exit
   end
 end

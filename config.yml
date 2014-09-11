@@ -1,3 +1,4 @@
 round_seconds: 300
+min_form_size: 4
 inc: 2
 dec: 1
