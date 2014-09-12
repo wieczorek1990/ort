@@ -2,9 +2,57 @@
 # encoding: UTF-8
 require 'io/console'
 require 'readline'
+require 'socket'
 require 'thread'
 require 'yaml'
 require_relative 'ort.rb'
+
+class EndGame < Exception
+end
+class String
+  def bold
+    "\033[1m#{self}\033[22m"
+  end
+  def highlight
+    "\033[7m#{self}\033[27m"
+  end
+end
+class Record
+  attr_reader :name, :time, :good, :bad
+  def initialize(name, time, good, bad)
+    @name = name
+    @time = time
+    @good = good
+    @bad = bad
+  end
+  def marshal_dump
+    [@name, @time, @good, @bad]
+  end
+  def marshal_load array
+    @name, @time, @good, @bad = array
+  end
+end
+
+hostname = Socket.gethostname
+DIR = File.dirname(__FILE__) + File::SEPARATOR
+CONFIG_PATH = DIR + 'config.yml'
+config = YAML.load_file CONFIG_PATH
+ROUND_SECONDS = config['round_seconds']
+MIN_FORM_SIZE = config['min_form_size']
+SERVER_IP = config['server_ip']
+STRINGS_PATH = DIR + config['language'] + '.yml'
+STRINGS = YAML.load_file STRINGS_PATH
+DB_PATH = DIR + 'db' + File::SEPARATOR + hostname
+if File.exists?(DB_PATH)
+  records = Marshal.load(File.binread(DB_PATH))
+else
+  records = []
+end
+ort = Ort.new
+
+def t(key, args = [])
+  sprintf STRINGS[key], *args
+end
 def clear
   system 'clear'
 end
@@ -24,9 +72,11 @@ ensure
   STDIN.cooked!
   return input
 end
-def press_to_continue
-  print 'Naciśnij dowolny klawisz, aby kontynuować...'
+def press_any_key_to_continue
+  print t('press_any_key_to_continue')
+  cursor 'on'
   read_char
+  cursor 'off'
 end
 def selector(options, before = '', after = '')
   choice = 0
@@ -56,63 +106,23 @@ def selector(options, before = '', after = '')
 end
 def sort(records)
   records.sort! do |a, b|
-    [a.points, b.time] <=> [b.points, a.time]
+    [b.good, a.bad, a.time] <=> [a.good, b.bad, b.time]
   end
-  records.reverse!
-end
-class EndGame < Exception
-end
-class String
-  def bold
-    "\033[1m#{self}\033[22m"
-  end
-  def highlight
-    "\033[7m#{self}\033[27m"
-  end
-end
-class Record
-  attr_reader :name, :time, :points
-  def initialize(name, time, points)
-    @name = name
-    @time = time
-    @points = points
-  end
-  def marshal_dump
-    [@name, @time, @points]
-  end
-  def marshal_load array
-    @name, @time, @points = array
-  end
-end
-
-DIR = File.dirname(__FILE__) + File::SEPARATOR
-DB_PATH = DIR + 'db'
-CONFIG_PATH = DIR + 'config.yml'
-config = YAML.load_file CONFIG_PATH
-ROUND_SECONDS = config['round_seconds']
-MIN_FORM_SIZE = config['min_form_size']
-INC = config['inc']
-DEC = config['dec']
-ort = Ort.new
-if File.exists?(DB_PATH)
-  records = Marshal.load(File.binread(DB_PATH))
-else
-  records = []
 end
 
 loop do
   begin
     cursor 'off'
-    choice = selector ['Graj', 'Wyniki', 'Wyjście'], "Witaj w programie do nauki ortografi!\nReguły: dobra odpowiedź - +#{INC}, zła odpowiedź -#{DEC}.\nWybierz co chcesz zrobić:\n"
-    if choice == 0
-      points = 0
+    choice = selector [t('play'), t('results'), t('exit')], t('welcome')
+    case choice
+    when 0
       good = 0
       bad = 0
       name = ''
       loop do
         clear
         cursor 'on'
-        print 'Podaj swój pseudonim: '
+        print t('nickname_prompt')
         name = Readline.readline
         unless name.empty?
           cursor 'off'
@@ -134,51 +144,49 @@ loop do
             break
           end
         end
-        answer = selector forms, "Punkty #{points.to_s}. Dobre: #{good}. Złe: #{bad}. Pozostały czas: #{Time.at(seconds_left).utc.strftime('%M:%S')}.\nWybierz poprawną formę:\n"
+        answer = selector forms, t('status_and_choose', [good, bad, Time.at(seconds_left).utc.strftime('%M:%S')])
         if forms[answer] == word
-          puts 'Poprawnie!'
-          points += INC
+          puts t('correct')
           good += 1
         else
-          puts 'Niepoprawnie. Poprawna odpowiedź to: ' + word.chomp.bold
-          points -= DEC
+          puts t('uncorrect') + word.chomp.bold
           bad += 1
         end
-        press_to_continue
+        press_any_key_to_continue
       end
-    elsif choice == 1
+    when 1
       clear
       unless records.empty?
         sort records
-        format = "%30s\t|\t%16s\t|\t%5s\n"
         rows, cols = $stdin.winsize
         rows = rows - 3
-        printf format, 'Imię', 'Kiedy', 'Punkty'
+        nickname_length = cols - 45
+        format = "  %#{nickname_length}s  |  %16s  |  %5s  |  %5s  \n"
+        printf format, t('nickname'), t('when'), t('good'), t('bad')
         puts '-' * cols
         many = rows > records.size ? records.size : rows
         many.times do |i|
           record = records[i]
-          printf format, record.name, record.time.strftime("%Y-%m-%d %H:%M"), record.points
+          printf format, record.name, record.time.strftime("%Y-%m-%d %H:%M"), record.good, record.bad
         end
       else
-        puts 'Jeszcze tutaj nie grano.'
+        puts t('nobody_played')
       end
-      press_to_continue
+      press_any_key_to_continue
     else
       exit
     end
   rescue EndGame
-    record = Record.new(name, Time.now, points)
+    record = Record.new(name, Time.now, good, bad)
     records << record
     sort records
     File.open(DB_PATH, 'wb') do |f|
       f.write(Marshal.dump(records))
     end
     clear
-    puts 'Twój wynik to: ' + points.to_s + ' punktów.'
-    puts good.to_s + ' dobrych odpowiedzi oraz ' + bad.to_s + ' złych odpowiedzi.'
-    puts 'Jesteś ' + (records.index(record) + 1).to_s + '. na liście rekordów.'
-    press_to_continue
+    puts t('position', [records.index(record) + 1])
+    puts t('result', [good, bad])
+    press_any_key_to_continue
   rescue SystemExit
     clear
     exit

@@ -1,0 +1,16 @@
+press_any_key_to_continue: 'Naciśnij dowolny klawisz, aby kontynuować...'
+welcome: "Witaj w programie do nauki ortografi!\nWybierz co chcesz zrobić:\n"
+play: 'Graj'
+results: 'Wyniki'
+exit: 'Wyjście'
+nickname_prompt: 'Podaj swój pseudonim: '
+status_and_choose: "Dobre: %d. Złe: %d. Pozostały czas: %s.\nWybierz poprawną formę:\n"
+correct: 'Poprawnie!'
+uncorrect: 'Niepoprawnie. Poprawna odpowiedź to: '
+nickname: 'Pseudonim'
+when: 'Kiedy'
+good: 'Dobre'
+bad: 'Złe'
+nobody_played: 'Jeszcze nikt tutaj nie grał.'
+result: "Twój wynik to:\nDobre odpowiedzi: %d. Złe odpowiedzi: %d."
+position: 'Jesteś %d. na liście rekordów.'
