@@ -11,8 +11,8 @@ require_relative 'translate'
 include Conf
 include Translate
 
-DB_PATH = File.dirname(__FILE__) + File::SEPARATOR + 'db' + File::SEPARATOR + Socket.gethostname
-RECORDS = Record::load DB_PATH
+DB_FILE_PATH = DB_PATH + Socket.gethostname
+RECORDS = Record::load DB_FILE_PATH
 TEST = ARGV[0] == 'test' ? true : false
 MIN_FORM_SIZE = conf 'min_form_size'
 PORT = conf 'port'
@@ -179,7 +179,7 @@ loop do
     record = Record.new(name, Time.now, good, bad)
     RECORDS << record
     RECORDS.sort!
-    Record::save DB_PATH, RECORDS
+    Record::save DB_FILE_PATH, RECORDS
     position_online = nil
     begin
       message = record.to_json

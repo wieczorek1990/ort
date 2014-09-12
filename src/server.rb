@@ -4,7 +4,7 @@ require_relative 'record'
 require_relative 'conf'
 include Conf
 
-DB_PATH = File.dirname(__FILE__) + File::SEPARATOR + 'db' + File::SEPARATOR + 'all'
+DB_FILE_PATH = DB_PATH + 'all'
 LOCK_PATH = Dir.tmpdir() + File::SEPARATOR + 'ort.lock'
 PORT = conf 'port'
 MAX_RECORDS_SENT_SIZE = conf 'max_records_sent_size'
@@ -29,7 +29,7 @@ begin
         case action
           when 'put'
             lock do
-              records = Record::load DB_PATH
+              records = Record::load DB_FILE_PATH
               message = client.gets.chomp
               record = Record.from_json message
               records << record
@@ -37,10 +37,10 @@ begin
               position = records.index(record) + 1
               client.puts position
               client.close
-              Record::save DB_PATH, records
+              Record::save DB_FILE_PATH, records
             end
           when 'get'
-            records = Record::load DB_PATH
+            records = Record::load DB_FILE_PATH
             records = records.take(MAX_RECORDS_SENT_SIZE)
             message = records.to_json
             client.write message
@@ -50,13 +50,13 @@ begin
             client.close
             local_records = Record::from_json message
             lock do
-              records = Record::load DB_PATH
+              records = Record::load DB_FILE_PATH
               local_records.each do |r|
                 unless records.include?(r)
                   records << r
                 end
               end
-              Record::save DB_PATH, records
+              Record::save DB_FILE_PATH, records
             end
         end
       puts

@@ -1,17 +1,21 @@
 #!/bin/bash
-src=/media/`whoami`/green/ort
-dest=~/ort
-bin=/usr/local/bin
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source ${DIR}/config.sh
 
-rm -rf $src/db/*
-if [ "`ls -A $dest/db `" ]
+rm -rf ${src}/db/*
+if [ -d ${dest}/db ]
 then
-    mv $dest/db/* $src/db/
+    if [ "`ls -A -I .gitignore ${dest}/db`" ]
+    then
+        cp ${dest}/db/* ${src}/db/
+    fi
 fi
-rm -rf $dest
-cp -r $src ~
-chmod +x $dest/ortografia
-if [ "`readlink -n $bin/ortografia`" != $dest/ortografia ]
-then
-    sudo ln -fs $dest/ortografia $bin
-fi
+sudo rm -rf ${dest}
+sudo cp -r ${src} ${dest}
+sudo chmod -R 777 ${dest}
+client='#!/bin/bash\nruby '${dest}'/src/ortografia.rb'
+server='#!/bin/bash\nruby '${dest}'/src/server.rb'
+sudo bash -c "echo -e '${client}' > ${bin}/ortografia"
+sudo bash -c "echo -e '${server}' > ${bin}/ortografia_server"
+sudo chmod +x ${bin}/ortografia
+sudo chmod +x ${bin}/ortografia_server

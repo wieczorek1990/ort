@@ -3,7 +3,7 @@ require_relative 'conf'
 include Conf
 
 class Ort
-  DICT = File.readlines(File.dirname(__FILE__) + File::SEPARATOR + 'pl_PL.dic')
+  DICT = File.readlines(DATA_PATH + 'pl_PL.dic')
   ORTS = ['ch', 'h', 'ż', 'rz', 'ó', 'u']
   CHANGES = {
     'ch' => 'h', 'h' => 'ch',
