@@ -15,6 +15,9 @@ class Record
   def marshal_load array
     @name, @time, @good, @bad = array
   end
+  def ==(o)
+    o.class == self.class and o.marshal_dump == marshal_dump
+  end
   def self.sort(records)
     records.sort! do |a, b|
       [b.good, a.bad, a.time] <=> [a.good, b.bad, b.time]
@@ -33,11 +36,20 @@ class Record
       f.write(Marshal.dump(records))
     end
   end
-  def to_json
-    {'name' => @name, 'time' => @time, 'good' => @good, 'bad' => @bad}.to_json
+  def to_json(options = {})
+    { 'name' => @name, 'time' => @time, 'good' => @good, 'bad' => @bad }.to_json
   end
   def self.from_json string
-    data = JSON.load string
-    self.new data['name'], Time.parse(data['time']), data['good'], data['bad']
+    result = []
+    data = JSON.restore string
+    data = [data] if data.kind_of? Hash
+    data.each do |item|
+      result << self.new(item['name'], Time.parse(item['time']), item['good'], item['bad'])
+    end
+    if result.size != 1
+      result
+    else
+      result[0]
+    end
   end
 end

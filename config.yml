@@ -1,6 +1,6 @@
-round_seconds: 300
-min_form_size: 4
 language: pl
-server_ip: 192.168.1.1
-port: 2000
 max_records_sent_size: 21
+port: 2000
+round_seconds: 3
+min_form_size: 4
+server_ip: 127.0.0.1
