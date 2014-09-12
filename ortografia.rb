@@ -1,11 +1,11 @@
-#!/usr/bin/ruby
 # encoding: UTF-8
 require 'io/console'
 require 'readline'
 require 'socket'
 require 'thread'
 require 'yaml'
-require_relative 'ort.rb'
+require_relative 'ort'
+require_relative 'record'
 
 class EndGame < Exception
 end
@@ -17,38 +17,20 @@ class String
     "\033[7m#{self}\033[27m"
   end
 end
-class Record
-  attr_reader :name, :time, :good, :bad
-  def initialize(name, time, good, bad)
-    @name = name
-    @time = time
-    @good = good
-    @bad = bad
-  end
-  def marshal_dump
-    [@name, @time, @good, @bad]
-  end
-  def marshal_load array
-    @name, @time, @good, @bad = array
-  end
-end
 
-hostname = Socket.gethostname
+HOSTNAME = Socket.gethostname
 DIR = File.dirname(__FILE__) + File::SEPARATOR
 CONFIG_PATH = DIR + 'config.yml'
-config = YAML.load_file CONFIG_PATH
-ROUND_SECONDS = config['round_seconds']
-MIN_FORM_SIZE = config['min_form_size']
-SERVER_IP = config['server_ip']
-STRINGS_PATH = DIR + config['language'] + '.yml'
+CONFIG = YAML.load_file CONFIG_PATH
+ROUND_SECONDS = CONFIG['round_seconds']
+MIN_FORM_SIZE = CONFIG['min_form_size']
+SERVER_IP = CONFIG['server_ip']
+PORT = CONFIG['port']
+STRINGS_PATH = DIR + CONFIG['language'] + '.yml'
 STRINGS = YAML.load_file STRINGS_PATH
-DB_PATH = DIR + 'db' + File::SEPARATOR + hostname
-if File.exists?(DB_PATH)
-  records = Marshal.load(File.binread(DB_PATH))
-else
-  records = []
-end
-ort = Ort.new
+DB_PATH = DIR + 'db' + File::SEPARATOR + HOSTNAME
+RECORDS = Record::load DB_PATH
+ORT = Ort.new
 
 def t(key, args = [])
   sprintf STRINGS[key], *args
@@ -104,16 +86,36 @@ def selector(options, before = '', after = '')
     end
   end
 end
-def sort(records)
-  records.sort! do |a, b|
-    [b.good, a.bad, a.time] <=> [a.good, b.bad, b.time]
+def results(records)
+  clear
+  unless records.empty?
+    rows, cols = STDIN.winsize
+    rows = rows - 3
+    nickname_length = cols - 45
+    format = "  %#{nickname_length}s  |  %16s  |  %5s  |  %5s  \n"
+    printf format, t('nickname'), t('when'), t('good'), t('bad')
+    puts '-' * cols
+    many = rows > records.size ? records.size : rows
+    many.times do |i|
+      record = records[i]
+      printf format, record.name[0...nickname_length], record.time.strftime("%Y-%m-%d %H:%M"), record.good, record.bad
+    end
+  else
+    puts t('nobody_played')
   end
+  press_any_key_to_continue
+end
+def no_connection(e)
+  clear
+  puts t('no_connection')
+  puts e.message
+  press_any_key_to_continue
 end
 
 loop do
   begin
     cursor 'off'
-    choice = selector [t('play'), t('results'), t('exit')], t('welcome')
+    choice = selector [t('play'), t('results_local'), t('results_online'), t('exit')], t('welcome')
     case choice
     when 0
       good = 0
@@ -138,8 +140,8 @@ loop do
         forms = []
         word = ''
         loop do
-          word = ort.get_word
-          forms = ort.get_forms(word)
+          word = ORT.get_word
+          forms = ORT.get_forms(word)
           if forms.size >= MIN_FORM_SIZE
             break
           end
@@ -155,36 +157,43 @@ loop do
         press_any_key_to_continue
       end
     when 1
-      clear
-      unless records.empty?
-        sort records
-        rows, cols = $stdin.winsize
-        rows = rows - 3
-        nickname_length = cols - 45
-        format = "  %#{nickname_length}s  |  %16s  |  %5s  |  %5s  \n"
-        printf format, t('nickname'), t('when'), t('good'), t('bad')
-        puts '-' * cols
-        many = rows > records.size ? records.size : rows
-        many.times do |i|
-          record = records[i]
-          printf format, record.name, record.time.strftime("%Y-%m-%d %H:%M"), record.good, record.bad
-        end
-      else
-        puts t('nobody_played')
+      results RECORDS
+    when 2
+      begin
+        socket = TCPSocket.open(SERVER_IP, PORT)
+        socket.puts 'get'
+        message = socket.read
+        records = Marshal.load(message)
+        socket.close
+        results records
+      rescue => e
+        no_connection e
       end
-      press_any_key_to_continue
     else
       exit
     end
   rescue EndGame
     record = Record.new(name, Time.now, good, bad)
-    records << record
-    sort records
-    File.open(DB_PATH, 'wb') do |f|
-      f.write(Marshal.dump(records))
+    RECORDS << record
+    Record::sort RECORDS
+    Record::save DB_PATH, RECORDS
+    position_online = nil
+    begin
+      socket = TCPSocket.open(SERVER_IP, PORT)
+      socket.puts 'put'
+      message = record.to_json
+      socket.puts message
+      position_online = socket.gets.chomp
+      socket.close
+    rescue => e
+      no_connection e
     end
     clear
-    puts t('position', [records.index(record) + 1])
+    unless position_online.nil?
+      puts t('position_online', [position_online])
+    end
+    position_local = RECORDS.index(record) + 1
+    puts t('position_local', [position_local])
     puts t('result', [good, bad])
     press_any_key_to_continue
   rescue SystemExit
