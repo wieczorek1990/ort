@@ -1,45 +1,45 @@
 # encoding: UTF-8
+require_relative 'conf'
+include Conf
+
 class Ort
-  DICT_PATH = File.dirname(__FILE__) + File::SEPARATOR + 'pl_PL.dic'
+  DICT = File.readlines(File.dirname(__FILE__) + File::SEPARATOR + 'pl_PL.dic')
   ORTS = ['ch', 'h', 'ż', 'rz', 'ó', 'u']
   CHANGES = {
     'ch' => 'h', 'h' => 'ch',
     'ż' => 'rz', 'rz' => 'ż',
     'ó' => 'u', 'u' => 'ó',
   }
-  SEQ_MAX = 3
-  def initialize
-    @dict = File.readlines(DICT_PATH)
+  ORT_MAX = conf 'ort_max'
+  def self.get_word
+    DICT.sample.chomp
   end
-  def get_word
-    return @dict.sample.chomp
-  end
-  def get_forms(word)
+  def self.get_forms(word)
     result = []
-    seqs = []
-    for seq in ORTS
-      if word.include?(seq)
-        seqs << seq
+    orts = []
+    for ort in ORTS
+      if word.include? ort
+        orts << ort
       end
     end
-    if seqs.include?('h') and seqs.include?('ch')
-      seqs.delete('h')
+    if orts.include?('h') and orts.include?('ch')
+      orts.delete 'h'
     end
-    seqs_size = seqs.size
-    seqs_size = seqs_size > SEQ_MAX ? SEQ_MAX : seqs_size
-    seqs.shuffle.first(seqs_size)
-    for i in 0..2**seqs_size - 1
-      l = 0
+    orts_size = orts.size
+    orts_size = orts_size > ORT_MAX ? ORT_MAX : orts_size
+    orts.shuffle.first(orts_size)
+    for i in 0...(2 ** orts_size)
+      k = 0
       w = word.clone
-      for j in (0..seqs_size).map{ |k| 2**k }
+      for j in (0..orts_size).map{ |l| 2 ** l }
         if i & j == j
-          seq = seqs[l]
-          w.sub!(seq, CHANGES[seq])
+          ort = orts[k]
+          w.sub! ort, CHANGES[ort]
         end
-        l += 1
+        k += 1
       end
       result << w.chomp
     end
-    return result.shuffle
+    result.shuffle
   end
 end

@@ -2,6 +2,7 @@ require 'json'
 require 'time'
 
 class Record
+  include Comparable
   attr_reader :name, :time, :good, :bad
   def initialize(name, time, good, bad)
     @name = name
@@ -18,18 +19,15 @@ class Record
   def ==(o)
     o.class == self.class and o.marshal_dump == marshal_dump
   end
-  def self.sort(records)
-    records.sort! do |a, b|
-      [b.good, a.bad, a.time] <=> [a.good, b.bad, b.time]
-    end
+  def <=>(o)
+    [o.good, @bad, @time] <=> [@good, @bad, o.time]
   end
   def self.load(db_path)
     if File.exists?(db_path)
-      records = Marshal.load(File.binread(db_path))
+      Marshal.load(File.binread(db_path))
     else
-      records = []
+      []
     end
-    records
   end
   def self.save(db_path, records)
     File.open(db_path, 'wb') do |f|

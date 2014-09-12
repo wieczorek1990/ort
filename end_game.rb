@@ -1,0 +1,2 @@
+class EndGame < Exception
+end

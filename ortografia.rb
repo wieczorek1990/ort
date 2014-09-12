@@ -2,44 +2,40 @@
 require 'io/console'
 require 'readline'
 require 'socket'
-require 'thread'
-require 'yaml'
+require_relative 'conf'
+require_relative 'end_game'
 require_relative 'ort'
 require_relative 'record'
+require_relative 'string'
+require_relative 'translate'
+include Conf
+include Translate
 
-class EndGame < Exception
-end
-class String
-  def bold
-    "\033[1m#{self}\033[22m"
-  end
-  def highlight
-    "\033[7m#{self}\033[27m"
-  end
-end
-
-HOSTNAME = Socket.gethostname
-DIR = File.dirname(__FILE__) + File::SEPARATOR
-CONFIG_PATH = DIR + 'config.yml'
-CONFIG = YAML.load_file CONFIG_PATH
-ROUND_SECONDS = CONFIG['round_seconds']
-MIN_FORM_SIZE = CONFIG['min_form_size']
-SERVER_IP = CONFIG['server_ip']
-PORT = CONFIG['port']
-STRINGS_PATH = DIR + CONFIG['language'] + '.yml'
-STRINGS = YAML.load_file STRINGS_PATH
-DB_PATH = DIR + 'db' + File::SEPARATOR + HOSTNAME
+DB_PATH = File.dirname(__FILE__) + File::SEPARATOR + 'db' + File::SEPARATOR + Socket.gethostname
 RECORDS = Record::load DB_PATH
-ORT = Ort.new
+TEST = ARGV[0] == 'test' ? true : false
+MIN_FORM_SIZE = conf 'min_form_size'
+PORT = conf 'port'
+ROUND_SECONDS = conf "#{'test_' if TEST}round_seconds"
+SERVER_IP = conf "#{'test_' if TEST}server_ip"
 
-def t(key, args = [])
-  sprintf STRINGS[key], *args
-end
 def clear
   system 'clear'
 end
 def cursor(setting)
   system "setterm -cursor #{setting}"
+end
+def no_connection(e)
+  clear
+  puts t('no_connection')
+  puts '"' + e.message + '"'
+  press_any_key_to_continue
+end
+def press_any_key_to_continue
+  print t('press_any_key_to_continue')
+  cursor 'on'
+  read_char
+  cursor 'off'
 end
 def read_char
   STDIN.echo = false
@@ -54,11 +50,25 @@ ensure
   STDIN.cooked!
   return input
 end
-def press_any_key_to_continue
-  print t('press_any_key_to_continue')
-  cursor 'on'
-  read_char
-  cursor 'off'
+def results(records)
+  clear
+  unless records.empty?
+    rows, cols = STDIN.winsize
+    rows = rows - 3
+    nickname_length = cols - 52
+    format = "  %2s  |  %#{nickname_length}s  |  %16s  |  %5s  |  %5s  \n"
+    printf format, '##', t('nickname'), t('when'), t('good'), t('bad')
+    puts '-' * cols
+    many = rows > records.size ? records.size : rows
+    many.times do |i|
+      record = records[i]
+      printf format, i + 1, record.name[0...nickname_length], record.time.strftime("%Y-%m-%d %H:%M"),
+             record.good, record.bad
+    end
+  else
+    puts t('nobody_played')
+  end
+  press_any_key_to_continue
 end
 def selector(options, extra = {})
   before = extra[:before].nil? ? '' : extra[:before]
@@ -88,38 +98,13 @@ def selector(options, extra = {})
     end
   end
 end
-def results(records)
-  clear
-  unless records.empty?
-    rows, cols = STDIN.winsize
-    rows = rows - 3
-    nickname_length = cols - 52
-    format = "  %2s  |  %#{nickname_length}s  |  %16s  |  %5s  |  %5s  \n"
-    printf format, '##', t('nickname'), t('when'), t('good'), t('bad')
-    puts '-' * cols
-    many = rows > records.size ? records.size : rows
-    many.times do |i|
-      record = records[i]
-      printf format, i + 1, record.name[0...nickname_length], record.time.strftime("%Y-%m-%d %H:%M"), record.good, record.bad
-    end
-  else
-    puts t('nobody_played')
-  end
-  press_any_key_to_continue
-end
-def no_connection(e)
-  clear
-  puts t('no_connection')
-  puts '"' + e.message + '"'
-  raise e
-  press_any_key_to_continue
-end
 
 choice = nil
 loop do
   begin
     cursor 'off'
-    choice = selector([t('play'), t('results_local'), t('results_online'), t('sync'), t('exit')], { before: t('welcome'), choice: choice })
+    choice = selector([t('play'), t('results_local'), t('results_online'), t('sync'), t('exit')],
+                      { before: t('welcome'), choice: choice })
     case choice
       when 0
         good = 0
@@ -144,18 +129,19 @@ loop do
           forms = []
           word = ''
           loop do
-            word = ORT.get_word
-            forms = ORT.get_forms(word)
+            word = Ort.get_word
+            forms = Ort.get_forms(word)
             if forms.size >= MIN_FORM_SIZE
               break
             end
           end
-          answer = selector(forms, { before: t('status_and_choose', [good, bad, Time.at(seconds_left).utc.strftime('%M:%S')]) })
+          answer = selector(forms, { before: t('status_and_choose',
+                                               [good, bad, Time.at(seconds_left).utc.strftime('%M:%S')]) })
           if forms[answer] == word
             puts t('correct')
             good += 1
           else
-            puts t('uncorrect') + word.chomp.bold
+            puts t('uncorrect') + word.bold
             bad += 1
           end
           press_any_key_to_continue
@@ -192,7 +178,7 @@ loop do
   rescue EndGame
     record = Record.new(name, Time.now, good, bad)
     RECORDS << record
-    Record::sort RECORDS
+    RECORDS.sort!
     Record::save DB_PATH, RECORDS
     position_online = nil
     begin
@@ -207,13 +193,14 @@ loop do
     end
     clear
     unless position_online.nil?
-      puts t('position_online', [position_online])
+      puts t('position_online', position_online)
     end
     position_local = RECORDS.index(record) + 1
-    puts t('position_local', [position_local])
+    puts t('position_local', position_local)
     puts t('result', [good, bad])
     press_any_key_to_continue
   rescue SystemExit
+    cursor 'on'
     clear
     exit
   end

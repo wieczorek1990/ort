@@ -1,15 +1,13 @@
 require 'socket'
 require 'tmpdir'
-require 'yaml'
 require_relative 'record'
+require_relative 'conf'
+include Conf
 
-DIR = File.dirname(__FILE__) + File::SEPARATOR
-DB_PATH = DIR + 'db' + File::SEPARATOR + 'all'
-CONFIG_PATH = DIR + 'config.yml'
-CONFIG = YAML.load_file CONFIG_PATH
-PORT = CONFIG['port']
-MAX_RECORDS_SENT_SIZE = CONFIG['max_records_sent_size']
+DB_PATH = File.dirname(__FILE__) + File::SEPARATOR + 'db' + File::SEPARATOR + 'all'
 LOCK_PATH = Dir.tmpdir() + File::SEPARATOR + 'ort.lock'
+PORT = conf 'port'
+MAX_RECORDS_SENT_SIZE = conf 'max_records_sent_size'
 
 def lock(&block)
   File.open(LOCK_PATH, 'w') do |f|
@@ -35,7 +33,7 @@ begin
               message = client.gets.chomp
               record = Record.from_json message
               records << record
-              Record::sort records
+              records.sort!
               position = records.index(record) + 1
               client.puts position
               client.close

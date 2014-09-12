@@ -9,3 +9,6 @@ all:
 	iconv -f ISO-8859-2 -t UTF-8 pl_PL.dic > temp.dic
 	sed -i 's/\/.*//g' temp.dic
 	mv temp.dic pl_PL.dic
+	tail -n +2 pl_PL.dic > temp.dic
+	mv temp.dic pl_PL.dic
+	perl -pi -e 'chomp if eof' pl_PL.dic
