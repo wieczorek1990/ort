@@ -1,2 +1,0 @@
-class EndGame < Exception
-end

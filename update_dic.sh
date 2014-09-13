@@ -1,4 +1,6 @@
 #!/bin/bash
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd ${DIR}
 mkdir tmp
 cd tmp
 wget -r --no-parent --no-directories -A 'sjp-myspell-pl-*.zip' http://sjp.pl/slownik/ort/

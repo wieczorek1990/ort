@@ -1,5 +1,5 @@
 #!/bin/bash
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source ${DIR}/config.sh
 
 rm -rf ${src}/db/*
@@ -12,8 +12,8 @@ then
 fi
 sudo rm -rf ${dest}
 sudo cp -r ${src} ${dest}
-sudo chmod -R 777 ${dest}
-client='#!/bin/bash\nruby '${dest}'/src/ortografia.rb'
+sudo chmod -R 755 ${dest}
+client='#!/bin/bash\nruby '${dest}'/src/ort.rb'
 server='#!/bin/bash\nruby '${dest}'/src/server.rb'
 sudo bash -c "echo -e '${client}' > ${bin}/ortografia"
 sudo bash -c "echo -e '${server}' > ${bin}/ortografia_server"

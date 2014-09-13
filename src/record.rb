@@ -44,10 +44,6 @@ class Record
     data.each do |item|
       result << self.new(item['name'], Time.parse(item['time']), item['good'], item['bad'])
     end
-    if result.size != 1
-      result
-    else
-      result[0]
-    end
+    result
   end
 end

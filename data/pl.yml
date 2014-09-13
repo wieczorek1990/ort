@@ -9,10 +9,12 @@ nobody_played: 'Jeszcze nikt nie grał.'
 play: 'Graj'
 position_local: 'Jesteś %d. na lokalnej liście rekordów.'
 position_online: 'Jesteś %d. na internetowej liście rekordów.'
+position_online_today: 'Jesteś %d. na dzisiejszej internetowej liście rekordów.'
 press_any_key_to_continue: 'Naciśnij dowolny klawisz, aby kontynuować...'
 result: "Dobre odpowiedzi: %d. Złe odpowiedzi: %d."
 results_local: 'Wyniki lokalne'
 results_online: 'Wyniki internetowe'
+results_online_today: 'Wyniki internetowe z dzisiaj'
 status_and_choose: "Dobre: %d. Złe: %d. Czas: %s.\nWybierz poprawną formę:\n"
 sync: 'Synchronizuj wyniki'
 sync_done: 'Synchronizacja wyników zakończona.'
