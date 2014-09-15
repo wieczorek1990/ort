@@ -68,11 +68,18 @@ class Game
         word = Generator.get_word
         forms = Generator.get_forms(word)
         if forms.size >= @min_form_size
+          forms = forms.take(@max_form_size)
+          if forms.size > @trunc_form_size
+            forms = forms.take(@trunc_form_size)
+          end
+          unless forms.include?(word)
+            forms[rand(forms.length)] = word
+          end
           break
         end
       end
       answer = selector(forms, { before: t('status_and_choose',
-                                           [good, bad, Time.at(seconds_left).utc.strftime('%M:%S')]) })
+                                           [good - bad, good, bad, Time.at(seconds_left).utc.strftime('%M:%S')]) })
       if forms[answer] == word
         puts t('correct')
         good += 1
@@ -86,7 +93,9 @@ class Game
   end
   def initialize(test)
     @db_file_path = DB_PATH + Socket.gethostname
+    @max_form_size = config 'max_form_size'
     @min_form_size = config 'min_form_size'
+    @trunc_form_size = config 'trunc_form_size'
     @port = config 'port'
     @round_seconds = config "#{'test_' if test}round_seconds"
     @server_ip = config "#{'test_' if test}server_ip"
@@ -109,15 +118,15 @@ class Game
     unless records.empty?
       rows, cols = STDIN.winsize
       rows = rows - 3
-      nickname_length = cols - 52
-      format = "  %2s  |  %#{nickname_length}s  |  %16s  |  %5s  |  %5s  \n"
-      printf format, '##', t('nickname'), t('when'), t('good'), t('bad')
+      nickname_length = cols - 63
+      format = "  %2s  |  %#{nickname_length}s  |  %16s  |  %6s  |  %5s  |  %5s  \n"
+      printf format, '##', t('nickname'), t('when'), t('points'), t('good'), t('bad')
       puts '-' * cols
       many = rows > records.size ? records.size : rows
       many.times do |i|
         record = records[i]
         printf format, i + 1, record.name[0...nickname_length], record.time.strftime("%Y-%m-%d %H:%M"),
-               record.good, record.bad
+               record.points, record.good, record.bad
       end
     else
       puts t('nobody_played')

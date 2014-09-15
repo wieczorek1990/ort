@@ -7,6 +7,7 @@ nickname_prompt: 'Podaj swój pseudonim: '
 no_connection: 'Brak połączenia z serwerem.'
 nobody_played: 'Jeszcze nikt nie grał.'
 play: 'Graj'
+points: 'Punkty'
 position_local: 'Jesteś %d. na lokalnej liście rekordów.'
 position_online: 'Jesteś %d. na internetowej liście rekordów.'
 position_online_today: 'Jesteś %d. na dzisiejszej internetowej liście rekordów.'
@@ -15,7 +16,7 @@ result: "Dobre odpowiedzi: %d. Złe odpowiedzi: %d."
 results_local: 'Wyniki lokalne'
 results_online: 'Wyniki internetowe'
 results_online_today: 'Wyniki internetowe z dzisiaj'
-status_and_choose: "Dobre: %d. Złe: %d. Czas: %s.\nWybierz poprawną formę:\n"
+status_and_choose: "Punkty: %s. Dobre: %d. Złe: %d. Czas: %s.\nWybierz poprawną formę:\n"
 sync: 'Synchronizuj wyniki'
 sync_done: 'Synchronizacja wyników zakończona.'
 uncorrect: 'Niepoprawnie. Poprawna odpowiedź to: '

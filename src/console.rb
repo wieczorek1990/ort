@@ -45,6 +45,7 @@ module Console
       case c
         when "\r", ' '
           return choice
+        # TODO allow interrupt
         when "\e"
           exit
         when "\e[A"

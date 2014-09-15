@@ -10,6 +10,9 @@ class Record
     @good = good
     @bad = bad
   end
+  def points
+    @good - @bad
+  end
   def marshal_dump
     [@name, @time, @good, @bad]
   end
@@ -20,7 +23,7 @@ class Record
     o.class == self.class and o.marshal_dump == marshal_dump
   end
   def <=>(o)
-    [o.good, @bad, @time] <=> [@good, @bad, o.time]
+    [o.points, o.good, @bad, @time] <=> [points, @good, @bad, o.time]
   end
   def self.load(db_path)
     if File.exists?(db_path)

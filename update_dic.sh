@@ -16,3 +16,5 @@ mv temp.dic pl_PL.dic
 tail -n +2 pl_PL.dic > temp.dic
 mv temp.dic pl_PL.dic
 perl -pi -e 'chomp if eof' pl_PL.dic
+egrep -v '(^..*[A-Z]+.*$)|(^[A-Z]+$)' pl_PL.dic > temp.dic
+mv temp.dic pl_PL.dic
