@@ -2,6 +2,7 @@
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source ${DIR}/config.sh
 
+# Backup DB's
 rm -rf ${src}/db/*
 if [ -d ${dest}/db ]
 then
@@ -10,12 +11,19 @@ then
         cp ${dest}/db/* ${src}/db/
     fi
 fi
-sudo rm -rf ${dest}
+# Uninstall
+bash ${DIR}/uninstall.sh
+# Install
 sudo cp -r ${src} ${dest}
 sudo chmod -R 755 ${dest}
+sudo chown -R ${user}:${user} ${dest}
+# Shortcuts
 client='#!/bin/bash\nruby '${dest}'/src/ort.rb'
-server='#!/bin/bash\nruby '${dest}'/src/server.rb'
 sudo bash -c "echo -e '${client}' > ${bin}/ortografia"
-sudo bash -c "echo -e '${server}' > ${bin}/ortografia_server"
 sudo chmod +x ${bin}/ortografia
-sudo chmod +x ${bin}/ortografia_server
+if [ "$1" == 'server' ]
+then
+    server='#!/bin/bash\nruby '${dest}'/src/server.rb'
+    sudo bash -c "echo -e '${server}' > ${bin}/ortografia_server"
+    sudo chmod +x ${bin}/ortografia_server
+fi

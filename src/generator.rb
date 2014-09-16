@@ -50,14 +50,14 @@ class Generator
     orts_size = orts_size > ORT_MAX ? ORT_MAX : orts_size
     orts = orts.shuffle!.first(orts_size)
     for i in 0...(2 ** orts_size)
-      orts_i = 0
+      ort_no = 0
       t = tokens.clone
       for j in (0..orts_size).map{ |k| 2 ** k }
         if i & j == j
-          ort, pos = orts[orts_i].first
+          ort, pos = orts[ort_no].first
           t[pos] = CHANGES[ort]
         end
-        orts_i += 1
+        ort_no += 1
       end
       result << t.join('')
     end

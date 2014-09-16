@@ -3,6 +3,7 @@ require 'readline'
 require 'socket'
 require_relative 'conf'
 require_relative 'console'
+require_relative 'enumerable'
 require_relative 'generator'
 require_relative 'record'
 require_relative 'string'
@@ -12,8 +13,37 @@ include Console
 include Translate
 
 class Game
-  def end_game(name, good, bad)
-    record = Record.new(name, Time.now, good, bad)
+  def cheated(play_time, answer_times)
+    minimum_seconds_per_round = config 'minimum_seconds_per_round'
+    minimum_answer_seconds = config 'minimum_answer_seconds'
+    if play_time < minimum_seconds_per_round
+      return true
+    end
+    mean = answer_times.mean
+    deviation = 3 * answer_times.standard_deviation
+    fast_answers = answer_times.select { |a| a > mean - deviation and a < mean + deviation }
+    if fast_answers.mean < minimum_answer_seconds
+      return true
+    end
+    return false
+  end
+  def end_game(name, good, bad, start, answer_times)
+    stop = Time.now
+    if cheated(stop - start, answer_times)
+      clear
+      message = t('cheating') + ' '
+      rows, cols = STDIN.winsize
+      max = rows * cols
+      (max / message.length).round.times do
+        print message
+      end
+      loop do
+        if STDIN.getch == "\u001C"
+            exit
+        end
+      end
+    end
+    record = Record.new(name, stop, good, bad)
     @records << record
     @records.sort!
     Record::save @db_file_path, @records
@@ -31,6 +61,7 @@ class Game
       no_connection e
     end
     clear
+    puts t('game_time', format_seconds(stop - start))
     unless position_online_today.nil?
       puts t('position_online_today', position_online_today)
     end
@@ -39,25 +70,28 @@ class Game
     end
     position_local = @records.index(record) + 1
     puts t('position_local', position_local)
-    puts t('result', [good, bad])
+    puts t('result', [good - bad, good, bad])
     press_any_key_to_continue
+  end
+  def format_seconds(seconds)
+    Time.at(seconds).utc.strftime('%M:%S')
   end
   def game
     good = 0
     bad = 0
     name = ''
+    answer_times = []
     loop do
       clear
       cursor 'on'
-      print t('nickname_prompt')
-      name = Readline.readline
+      name = Readline.readline t('nickname_prompt')
       unless name.empty?
         cursor 'off'
         break
       end
     end
     start = Time.now
-    loop do
+    @questions_count.times do |question_no|
       seconds_left = @round_seconds - (Time.now - start)
       if seconds_left <= 0
         break
@@ -67,19 +101,20 @@ class Game
       loop do
         word = Generator.get_word
         forms = Generator.get_forms(word)
+        forms = forms.take(@max_form_size)
         if forms.size >= @min_form_size
-          forms = forms.take(@max_form_size)
-          if forms.size > @trunc_form_size
-            forms = forms.take(@trunc_form_size)
-          end
           unless forms.include?(word)
             forms[rand(forms.length)] = word
           end
           break
         end
       end
+      answer_start = Time.now
       answer = selector(forms, { before: t('status_and_choose',
-                                           [good - bad, good, bad, Time.at(seconds_left).utc.strftime('%M:%S')]) })
+                                           [format_seconds(seconds_left), question_no, good - bad, good, bad]),
+                                 choice: (forms.size-1)/2 })
+      answer_end = Time.now
+      answer_times << answer_end - answer_start
       if forms[answer] == word
         puts t('correct')
         good += 1
@@ -89,7 +124,7 @@ class Game
       end
       press_any_key_to_continue
     end
-    end_game name, good, bad
+    end_game name, good, bad, start, answer_times
   end
   def initialize(test)
     @db_file_path = DB_PATH + Socket.gethostname
@@ -97,6 +132,7 @@ class Game
     @min_form_size = config 'min_form_size'
     @trunc_form_size = config 'trunc_form_size'
     @port = config 'port'
+    @questions_count = config 'questions_count'
     @round_seconds = config "#{'test_' if test}round_seconds"
     @server_ip = config "#{'test_' if test}server_ip"
     @records = Record::load @db_file_path

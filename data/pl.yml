@@ -1,4 +1,5 @@
 bad: 'Złe'
+cheating: 'Oszukujesz!'
 correct: 'Poprawnie!'
 exit: 'Wyjście'
 good: 'Dobre'
@@ -12,13 +13,14 @@ position_local: 'Jesteś %d. na lokalnej liście rekordów.'
 position_online: 'Jesteś %d. na internetowej liście rekordów.'
 position_online_today: 'Jesteś %d. na dzisiejszej internetowej liście rekordów.'
 press_any_key_to_continue: 'Naciśnij dowolny klawisz, aby kontynuować...'
-result: "Dobre odpowiedzi: %d. Złe odpowiedzi: %d."
+result: "Punkty: %d | Dobre odpowiedzi: %d | Złe odpowiedzi: %d"
 results_local: 'Wyniki lokalne'
 results_online: 'Wyniki internetowe'
 results_online_today: 'Wyniki internetowe z dzisiaj'
-status_and_choose: "Punkty: %s. Dobre: %d. Złe: %d. Czas: %s.\nWybierz poprawną formę:\n"
+status_and_choose: "Czas: %s | Pytanie: %d | Punkty: %d | Dobre: %d | Złe: %d\nWybierz poprawną formę:\n"
 sync: 'Synchronizuj wyniki'
 sync_done: 'Synchronizacja wyników zakończona.'
+game_time: 'Czas gry: %s'
 uncorrect: 'Niepoprawnie. Poprawna odpowiedź to: '
 welcome: "Witaj w programie do nauki ortografi!\nWybierz co chcesz zrobić:\n"
 when: 'Kiedy'

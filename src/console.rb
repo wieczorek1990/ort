@@ -14,6 +14,7 @@ module Console
     system "setterm -cursor #{setting}"
   end
   def read_char
+    #STDIN.getch
     STDIN.echo = false
     STDIN.raw!
     input = STDIN.getc.chr
@@ -21,7 +22,7 @@ module Console
       input << STDIN.read_nonblock(3) rescue nil
       input << STDIN.read_nonblock(2) rescue nil
     end
-  ensure
+    ensure
     STDIN.echo = true
     STDIN.cooked!
     return input
@@ -45,8 +46,7 @@ module Console
       case c
         when "\r", ' '
           return choice
-        # TODO allow interrupt
-        when "\e"
+        when "\e", "\u0003", "\u001C"
           exit
         when "\e[A"
           choice = choice - 1 < 0 ? options.size - 1 : choice - 1
