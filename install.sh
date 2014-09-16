@@ -1,6 +1,6 @@
 #!/bin/bash
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source ${DIR}/config.sh
+cd ${DIR}; source config.sh; cd -
 
 # Backup DB's
 rm -rf ${src}/db/*

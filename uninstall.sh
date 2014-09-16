@@ -1,6 +1,6 @@
 #!/bin/bash
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source ${DIR}/config.sh
+cd ${DIR}; source config.sh; cd -
 
 sudo rm -rf ${dest}
 sudo rm -f ${bin}/ortografia
