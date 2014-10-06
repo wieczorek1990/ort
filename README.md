@@ -1,4 +1,8 @@
 ort
 ===
 
-Prosty program do nauki ortografii
+Simple program for Polish ortography learning.
+
+---
+
+Prosty program do nauki polskiej ortografii.
