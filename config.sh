@@ -1,6 +1,5 @@
 #!/bin/bash
-user=`whoami`
-drive_name=green
-src=/media/${user}/${drive_name}/ort
-dest=~/ort
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+src=$DIR
+dest=/opt/ort
 bin=/usr/local/bin

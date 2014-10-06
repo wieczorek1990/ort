@@ -1,5 +1,6 @@
 require 'json'
 require 'time'
+include Conf
 
 class Record
   include Comparable
@@ -33,6 +34,9 @@ class Record
     end
   end
   def self.save(db_path, records)
+    unless Dir.exists? DB_PATH
+      Dir.mkdir DB_PATH
+    end
     File.open(db_path, 'wb') do |f|
       f.write(Marshal.dump(records))
     end

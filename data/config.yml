@@ -1,13 +1,23 @@
-language: pl
-port: 2000
+# Language - same as yml filename
+language: en
+# Server port
+port: 12956
+# Server ip
 server_ip: 192.168.1.1
+# Server ip for testing
 test_server_ip: 127.0.0.1
+# Round seconds - game allows only one answer after $round_seconds
 round_seconds: 180
+# Round seconds for testing
 test_round_seconds: 3
+# How many questions will be asked in $round_seconds
 questions_count: 20
+# Generator settings
 ort_max: 3 # max Float::INFINITY
 max_form_size: 3 # max Float::INFINITY
 min_form_size: 3 # min 1 # form sizes are 2^n
+# Anit-cheat
 minimum_seconds_per_round: 45
 minimum_answer_seconds: 0.25
+# How many result records are sent from server to client
 max_records_sent_size: 21

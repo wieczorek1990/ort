@@ -1,0 +1,26 @@
+bad: 'Bad'
+cheating: 'You are cheating!'
+correct: 'Correct!'
+exit: 'Exit'
+good: 'Good'
+nickname: 'Nickname'
+nickname_prompt: 'Enter your nickname: '
+no_connection: 'No connection with the server.'
+nobody_played: 'Nobody played yet.'
+play: 'Play'
+points: 'Points'
+position_local: 'You are %d. on the local records list.'
+position_online: 'You are %d. on the internet records list.'
+position_online_today: "You are %d. on the today's internet records list."
+press_any_key_to_continue: 'Press any key to continue...'
+result: 'Points: %d | Good answers: %d | Bad answers: %d'
+results_local: 'Local results'
+results_online: 'Internet results'
+results_online_today: "Today's internet results"
+status_and_choose: "Time: %s | Question: %d | Points: %d | Good: %d | Bad: %d\nChoose correct form:\n"
+sync: 'Synchronize results'
+sync_done: 'Results synchronization finshed.'
+game_time: 'Game time: %s'
+uncorrect: 'Uncorrect. Correct answer is: '
+welcome: "Welcome in the Polish ortography learning program!\nChoose what you want to do:\n"
+when: 'When'

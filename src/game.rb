@@ -29,7 +29,7 @@ class Game
   end
   def end_game(name, good, bad, start, answer_times)
     stop = Time.now
-    if cheated(stop - start, answer_times)
+    if cheated(stop - start, answer_times) and not @test
       clear
       message = t('cheating') + ' '
       rows, cols = STDIN.winsize
@@ -136,11 +136,12 @@ class Game
     @round_seconds = config "#{'test_' if test}round_seconds"
     @server_ip = config "#{'test_' if test}server_ip"
     @records = Record::load @db_file_path
+    @test = test
   end
   def no_connection(e)
     clear
     puts t('no_connection')
-    puts '"' + e.message + '"'
+    puts '"' + e.message + '"' if @test
     press_any_key_to_continue
   end
   def press_any_key_to_continue

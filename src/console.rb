@@ -11,10 +11,14 @@ module Console
     system 'clear'
   end
   def cursor(setting)
-    system "setterm -cursor #{setting}"
+    case setting
+      when 'on'
+        system 'tput cnorm'
+      when 'off'
+        system 'tput civis'
+    end
   end
-  def read_char
-    #STDIN.getch
+  def read_char(selector=false)
     STDIN.echo = false
     STDIN.raw!
     input = STDIN.getc.chr
