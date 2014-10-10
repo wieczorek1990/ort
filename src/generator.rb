@@ -1,6 +1,5 @@
-# encoding: UTF-8
+# -*- encoding : utf-8 -*-
 require_relative 'conf'
-require_relative 'string'
 include Conf
 
 class Generator
@@ -12,7 +11,7 @@ class Generator
   SINGLES = CHANGES.keys.select { |c| c.length == 1 }
   CLUSTERS = CHANGES.keys.select { |c| c.length == 2 }
   BIG = %w(Ą Ć Ę Ł Ń Ó Ś Ż Ź)
-  DICT = File.readlines(DATA_PATH + 'pl_PL.dic')
+  DICT = File.readlines(DATA_PATH + 'pl_PL.dic', :encoding => "utf-8")
   ORT_MAX = config 'ort_max'
   def self.get_word
     DICT.sample.chomp

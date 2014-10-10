@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 require 'socket'
 require 'time'
 require 'tmpdir'
@@ -18,6 +19,7 @@ class Server
     end
   end
   def run
+    puts "PORT: #{PORT}"
     begin
       Thread.abort_on_exception = true
       socket = TCPServer.open(PORT)

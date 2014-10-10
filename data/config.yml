@@ -1,11 +1,11 @@
 # Language - same as yml filename
-language: en
+language: pl
 # Server port
-port: 12956
-# Server ip
-server_ip: 192.168.1.1
-# Server ip for testing
-test_server_ip: 127.0.0.1
+port: 52956
+# Server ip or hostname
+server: 192.168.1.1
+# Server ip or hostname for testing
+test_server: localhost
 # Round seconds - game allows only one answer after $round_seconds
 round_seconds: 180
 # Round seconds for testing

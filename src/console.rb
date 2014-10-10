@@ -1,5 +1,7 @@
+# -*- encoding : utf-8 -*-
+require 'colorize'
+require 'highline/system_extensions' if Gem.win_platform?
 require 'io/console'
-require_relative 'string'
 
 module Console
   def clean_exit
@@ -8,8 +10,9 @@ module Console
     exit
   end
   def clear
-    system 'clear'
+    system 'clear' or system 'cls'
   end
+  # TODO find Windows equivalent
   def cursor(setting)
     case setting
       when 'on'
@@ -18,44 +21,85 @@ module Console
         system 'tput civis'
     end
   end
-  def read_char(selector=false)
-    STDIN.echo = false
-    STDIN.raw!
-    input = STDIN.getc.chr
-    if input == "\e" then
-      input << STDIN.read_nonblock(3) rescue nil
-      input << STDIN.read_nonblock(2) rescue nil
+  def get_char
+    if Gem.win_platform?
+      multibyte_char = []
+      multibyte_char << HighLine::SystemExtensions::get_character
+      if [0, 224].include? multibyte_char[0]
+        multibyte_char << HighLine::SystemExtensions::get_character
+      end
+      multibyte_char = multibyte_char[0] if multibyte_char.size == 1
+      multibyte_char
+    else
+      # TODO find another method
+      begin
+        STDIN.echo = false
+        STDIN.raw!
+        input = STDIN.getc.chr
+        if input == "\e"
+          input << STDIN.read_nonblock(3) rescue nil
+        end
+      ensure
+        STDIN.echo = true
+        STDIN.cooked!
+        return input
+      end
     end
-    ensure
-    STDIN.echo = true
-    STDIN.cooked!
-    return input
   end
   def selector(options, extra = {})
+    def prev_choice(choice, last)
+      choice - 1 < 0 ? last : choice - 1
+    end
+    def next_choice(choice, last)
+      choice + 1 > last ? 0 : choice + 1
+    end
     before = extra[:before].nil? ? '' : extra[:before]
     after = extra[:after].nil? ? '' : extra[:after]
     choice = extra[:choice].nil? ? 0 : extra[:choice]
+    last = options.size - 1
     loop do
       clear
       print before
       options.each_with_index do |line, i|
+        line = line.yellow
         if i != choice
           puts line
         else
-          puts line.highlight
+          puts line.swap
         end
       end
       print after
-      c = read_char
-      case c
-        when "\r", ' '
-          return choice
-        when "\e", "\u0003", "\u001C"
-          exit
-        when "\e[A"
-          choice = choice - 1 < 0 ? options.size - 1 : choice - 1
-        when "\e[B"
-          choice = choice + 1 > options.size - 1 ? 0 : choice + 1
+      c = get_char
+      if Gem.win_platform?
+        case c
+          # enter, space
+          when 13, 32
+            return choice
+          # esc, ctrl+c
+          when 27, 3
+            clean_exit
+          # up
+          when [0, 72], [224, 72]
+            choice = prev_choice(choice, last)
+          # down
+          when [0, 80], [224, 80]
+            choice = next_choice(choice, last)
+        end
+      else
+        case c
+          # enter, space
+          when "\r", ' '
+            return choice
+          # esc, ctrl+c
+          when "\e", "\u0003"
+            clean_exit
+          # up
+          when "\e[A"
+            choice = prev_choice(choice, last)
+          # down
+          when "\e[B"
+            choice = next_choice(choice, last)
+        end
       end
     end
   end

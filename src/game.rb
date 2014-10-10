@@ -1,12 +1,13 @@
+# -*- encoding : utf-8 -*-
+require 'colorize'
 require 'io/console'
-require 'readline'
+require 'readline' unless Gem.win_platform?
 require 'socket'
 require_relative 'conf'
 require_relative 'console'
 require_relative 'enumerable'
 require_relative 'generator'
 require_relative 'record'
-require_relative 'string'
 require_relative 'translate'
 include Conf
 include Console
@@ -32,14 +33,15 @@ class Game
     if cheated(stop - start, answer_times) and not @test
       clear
       message = t('cheating') + ' '
-      rows, cols = STDIN.winsize
+      rows, cols = STDOUT.winsize
       max = rows * cols
       (max / message.length).round.times do
         print message
       end
       loop do
-        if STDIN.getch == "\u001C"
-            exit
+        # ctrl+\
+        if get_char == 28
+            clean_exit
         end
       end
     end
@@ -51,7 +53,7 @@ class Game
     position_online_today = nil
     begin
       message = record.to_json
-      socket = TCPSocket.open(@server_ip, @port)
+      socket = TCPSocket.open(@server, @port)
       socket.puts 'put'
       socket.puts message
       position_online = socket.gets.chomp
@@ -84,7 +86,17 @@ class Game
     loop do
       clear
       cursor 'on'
-      name = Readline.readline t('nickname_prompt')
+      prompt = t('nickname_prompt')
+      begin
+        if Gem.win_platform?
+          print prompt
+            name = STDIN.gets.chomp
+        else
+          name = Readline.readline(prompt)
+        end
+      rescue Exception
+        clean_exit
+      end
       unless name.empty?
         cursor 'off'
         break
@@ -119,7 +131,7 @@ class Game
         puts t('correct')
         good += 1
       else
-        puts t('uncorrect') + word.bold
+        puts t('uncorrect') + word.yellow.swap
         bad += 1
       end
       press_any_key_to_continue
@@ -134,7 +146,7 @@ class Game
     @port = config 'port'
     @questions_count = config 'questions_count'
     @round_seconds = config "#{'test_' if test}round_seconds"
-    @server_ip = config "#{'test_' if test}server_ip"
+    @server_ip = config "#{'test_' if test}server"
     @records = Record::load @db_file_path
     @test = test
   end
@@ -147,13 +159,13 @@ class Game
   def press_any_key_to_continue
     print t('press_any_key_to_continue')
     cursor 'on'
-    read_char
+    get_char
     cursor 'off'
   end
   def results(records)
     clear
     unless records.empty?
-      rows, cols = STDIN.winsize
+      rows, cols = STDOUT.winsize
       rows = rows - 3
       nickname_length = cols - 63
       format = "  %2s  |  %#{nickname_length}s  |  %16s  |  %6s  |  %5s  |  %5s  \n"
@@ -172,7 +184,7 @@ class Game
   end
   def results_online(today = false)
     begin
-      socket = TCPSocket.open(@server_ip, @port)
+      socket = TCPSocket.open(@server, @port)
       socket.puts 'get'
       unless today
         socket.puts 'false'
@@ -190,7 +202,7 @@ class Game
   def sync
     begin
       message = @records.to_json
-      socket = TCPSocket.open(@server_ip, @port)
+      socket = TCPSocket.open(@server, @port)
       socket.puts 'sync'
       socket.write message
       socket.close
@@ -204,26 +216,22 @@ class Game
   def run
     choice = nil
     loop do
-      begin
-        cursor 'off'
-        choice = selector([t('play'), t('results_online_today'), t('results_online'), t('results_local'), t('sync'), t('exit')],
-                          { before: t('welcome'), choice: choice })
-        case choice
-          when 0
-            game
-          when 1
-            results_online true
-          when 2
-            results_online
-          when 3
-            results @records
-          when 4
-            sync
-          else
-            exit
-        end
-      rescue Interrupt, SystemExit
-        clean_exit
+      cursor 'off'
+      choice = selector([t('play'), t('results_online_today'), t('results_online'), t('results_local'), t('sync'), t('exit')],
+                        { before: t('welcome'), choice: choice })
+      case choice
+        when 0
+          game
+        when 1
+          results_online true
+        when 2
+          results_online
+        when 3
+          results @records
+        when 4
+          sync
+        else
+          clean_exit
       end
     end
   end

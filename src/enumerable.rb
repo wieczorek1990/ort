@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 module Enumerable
   def sum
     self.inject(0) { |accum, i| accum + i }
@@ -11,6 +12,6 @@ module Enumerable
     sum / (self.length - 1).to_f
   end
   def standard_deviation
-    return Math.sqrt self.sample_variance
+    Math.sqrt self.sample_variance
   end
 end
