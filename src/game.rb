@@ -146,7 +146,7 @@ class Game
     @port = config 'port'
     @questions_count = config 'questions_count'
     @round_seconds = config "#{'test_' if test}round_seconds"
-    @server_ip = config "#{'test_' if test}server"
+    @server = config "#{'test_' if test}server"
     @records = Record::load @db_file_path
     @test = test
   end
