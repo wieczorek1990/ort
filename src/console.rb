@@ -3,53 +3,63 @@ require 'colorize'
 require 'highline/system_extensions' if Gem.win_platform?
 require 'io/console'
 
+# Terminal helpers
 module Console
   def clean_exit
     cursor 'on'
     clear
     exit
   end
+
   def clear
-    system 'clear' or system 'cls'
+    system('clear') || system('cls')
   end
-  # TODO find Windows equivalent
+
+  # TODO: find Windows equivalent
   def cursor(setting)
     case setting
-      when 'on'
-        system 'tput cnorm'
-      when 'off'
-        system 'tput civis'
+    when 'on'
+      system 'tput cnorm'
+    when 'off'
+      system 'tput civis'
     end
   end
-  def get_char
+
+  def read_char
     if Gem.win_platform?
       multibyte_char = []
-      multibyte_char << HighLine::SystemExtensions::get_character
+      multibyte_char << HighLine::SystemExtensions.get_character
       if [0, 224].include? multibyte_char[0]
-        multibyte_char << HighLine::SystemExtensions::get_character
+        multibyte_char << HighLine::SystemExtensions.get_character
       end
       multibyte_char = multibyte_char[0] if multibyte_char.size == 1
       multibyte_char
     else
-      # TODO find another method
+      # TODO: find another method
       begin
         STDIN.echo = false
         STDIN.raw!
         input = STDIN.getc.chr
         if input == "\e"
-          input << STDIN.read_nonblock(3) rescue nil
+          begin
+            input << STDIN.read_nonblock(3)
+          rescue nil
+            nil
+          end
         end
       ensure
         STDIN.echo = true
         STDIN.cooked!
-        return input
       end
+      input
     end
   end
+
   def selector(options, extra = {})
     def prev_choice(choice, last)
       choice - 1 < 0 ? last : choice - 1
     end
+
     def next_choice(choice, last)
       choice + 1 > last ? 0 : choice + 1
     end
@@ -69,36 +79,36 @@ module Console
         end
       end
       print after
-      c = get_char
+      c = read_char
       if Gem.win_platform?
         case c
-          # enter, space
-          when 13, 32
-            return choice
-          # esc, ctrl+c
-          when 27, 3
-            clean_exit
-          # up
-          when [0, 72], [224, 72]
-            choice = prev_choice(choice, last)
-          # down
-          when [0, 80], [224, 80]
-            choice = next_choice(choice, last)
+        # enter, space
+        when 13, 32
+          return choice
+        # esc, ctrl+c
+        when 27, 3
+          clean_exit
+        # up
+        when [0, 72], [224, 72]
+          choice = prev_choice(choice, last)
+        # down
+        when [0, 80], [224, 80]
+          choice = next_choice(choice, last)
         end
       else
         case c
-          # enter, space
-          when "\r", ' '
-            return choice
-          # esc, ctrl+c
-          when "\e", "\u0003"
-            clean_exit
-          # up
-          when "\e[A"
-            choice = prev_choice(choice, last)
-          # down
-          when "\e[B"
-            choice = next_choice(choice, last)
+        # enter, space
+        when "\r", ' '
+          return choice
+        # esc, ctrl+c
+        when "\e", "\u0003"
+          clean_exit
+        # up
+        when "\e[A"
+          choice = prev_choice(choice, last)
+        # down
+        when "\e[B"
+          choice = next_choice(choice, last)
         end
       end
     end
