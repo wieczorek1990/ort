@@ -5,7 +5,7 @@ Simple program for Polish ortography learning.
 ### Dependencies:
 On Linux and Windows: `gem install colorize`
 
-Additionally na Windows: `gem install highline`
+Additionally on Windows: `gem install highline`
 ### ort
 Setup `config.sh` with your favourite text editor and run `bash install.sh`.
 
