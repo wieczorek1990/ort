@@ -1,19 +1,20 @@
-# -*- encoding : utf-8 -*-
 require 'colorize'
 require 'io/console'
 require 'readline' unless Gem.win_platform?
 require 'socket'
+
 require_relative 'conf'
 require_relative 'console'
 require_relative 'enumerable'
 require_relative 'generator'
 require_relative 'record'
 require_relative 'translate'
+
 include Conf
 include Console
 include Translate
 
-# Terminal game interface plus game logic
+
 class Game
   def cheated(play_time, answer_times)
     minimum_seconds_per_round = config 'minimum_seconds_per_round'

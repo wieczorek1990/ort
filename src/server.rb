@@ -1,12 +1,12 @@
-# -*- encoding : utf-8 -*-
 require 'socket'
 require 'time'
 require 'tmpdir'
+
 require_relative 'conf'
 require_relative 'record'
+
 include Conf
 
-# TCP Server for results
 class Server
   DB_FILE_PATH = DB_PATH + 'all'
   LOCK_PATH = Dir.tmpdir + File::SEPARATOR + 'ort.lock'
@@ -67,6 +67,8 @@ class Server
                 end
                 Record.save DB_FILE_PATH, records
               end
+            else
+              nil
             end
             puts
           rescue Interrupt => e

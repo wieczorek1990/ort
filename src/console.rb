@@ -1,9 +1,7 @@
-# -*- encoding : utf-8 -*-
 require 'colorize'
 require 'highline/system_extensions' if Gem.win_platform?
 require 'io/console'
 
-# Terminal helpers
 module Console
   def clean_exit
     cursor 'on'
@@ -15,7 +13,7 @@ module Console
     system('clear') || system('cls')
   end
 
-  # TODO: find Windows equivalent
+  # TODO: Find Windows equivalent
   def cursor(setting)
     case setting
     when 'on'
@@ -35,7 +33,7 @@ module Console
       multibyte_char = multibyte_char[0] if multibyte_char.size == 1
       multibyte_char
     else
-      # TODO: find another method
+      # TODO: Find another method
       begin
         STDIN.echo = false
         STDIN.raw!
@@ -94,6 +92,8 @@ module Console
         # down
         when [0, 80], [224, 80]
           choice = next_choice(choice, last)
+        else
+          nil
         end
       else
         case c
@@ -109,6 +109,8 @@ module Console
         # down
         when "\e[B"
           choice = next_choice(choice, last)
+        else
+          nil
         end
       end
     end

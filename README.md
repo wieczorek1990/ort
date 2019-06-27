@@ -5,11 +5,6 @@ Simple program for Polish ortography learning.
 
 ## Installation:
 
-### Dependencies:
-On Linux and Windows: `gem install colorize`
-
-Additionally on Windows: `gem install highline`
-
 ### ort
 
 Setup `config.sh` with your favourite text editor and run `bash install.sh`.
@@ -64,12 +59,6 @@ ort
 Prosty program do nauki polskiej ortografii.
 
 ## Instalacja
-
-### Zależności
-
-Na Linux i Windows: `gem install colorize`
-
-Dodatkowo na Windows: `gem install highline`
 
 ### ort
 

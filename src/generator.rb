@@ -1,8 +1,6 @@
-# -*- encoding : utf-8 -*-
 require_relative 'conf'
 include Conf
 
-# Generates misspelled words
 class Generator
   CHANGES = {
     'ch' => 'h', 'h' => 'ch',

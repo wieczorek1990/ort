@@ -1,9 +1,6 @@
-# -*- encoding : utf-8 -*-
-
-# Statistics extensions
 module Enumerable
   def sum
-    inject(0) { |accum, i| accum + i }
+    inject(0, &:+)
   end
 
   def mean

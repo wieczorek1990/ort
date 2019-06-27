@@ -1,10 +1,10 @@
-# -*- encoding : utf-8 -*-
 require 'colorize'
 require 'yaml'
+
 require_relative 'conf'
+
 include Conf
 
-# Loads translations and provides translate helper
 module Translate
   STRINGS = YAML.load_file DATA_PATH + config('language') + '.yml'
 

@@ -1,9 +1,8 @@
-# -*- encoding : utf-8 -*-
 require 'json'
 require 'time'
+
 include Conf
 
-# Results record
 class Record
   include Comparable
   attr_reader :name, :time, :good, :bad
@@ -52,8 +51,8 @@ class Record
   end
 
   def to_json(options = {})
-    { 'name' => @name, 'time' => @time,
-      'good' => @good, 'bad' => @bad
+    {:name => @name, :time => @time,
+     :good => @good, :bad => @bad
     }.to_json(options)
   end
 
