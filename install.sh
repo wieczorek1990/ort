@@ -1,11 +1,15 @@
 #!/bin/bash
+
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 cd $DIR; source config.sh; cd - > /dev/null
 
 # Uninstall
 bash ${DIR}/uninstall.sh
+
 # Copy
 sudo cp -r ${src} ${dest}
+
 # Shortcuts
 client='#!/bin/bash\nruby '${dest}'/src/ort.rb'
 sudo bash -c "echo -e '${client}' > ${bin}/ort"
