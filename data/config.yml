@@ -4,6 +4,8 @@ language: pl
 port: 52956
 # Server ip or hostname
 server: 192.168.1.254
+# Whether server is verbose
+server_verbose: false
 # Server ip or hostname for testing
 test_server: localhost
 # Round seconds - game allows only one answer after $round_seconds

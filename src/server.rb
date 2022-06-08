@@ -12,6 +12,7 @@ class Server
   LOCK_PATH = Dir.tmpdir + File::SEPARATOR + 'ort.lock'
   MAX_RECORDS_SENT_SIZE = config 'max_records_sent_size'
   PORT = config 'port'
+  VERBOSE = config 'server_verbose'
 
   def lock(&block)
     File.open(LOCK_PATH, 'w') do |f|
@@ -22,7 +23,7 @@ class Server
   end
 
   def run
-    puts "PORT: #{PORT}"
+    puts "PORT: #{PORT}" if VERBOSE
     begin
       Thread.abort_on_exception = true
       socket = TCPServer.open(PORT)
