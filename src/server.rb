@@ -26,7 +26,7 @@ class Server
     puts "PORT: #{PORT}" if VERBOSE
     begin
       Thread.abort_on_exception = true
-      socket = TCPServer.open(PORT)
+      socket = TCPServer.open('0.0.0.0', PORT)
       loop do
         Thread.start(socket.accept) do |client|
           begin

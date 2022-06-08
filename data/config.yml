@@ -4,6 +4,8 @@ language: pl
 port: 52956
 # Server ip or hostname
 server: 192.168.1.254
+# How many seconds to wait for socket connection
+socket_timeout_seconds: 3
 # Whether server is verbose
 server_verbose: false
 # Server ip or hostname for testing

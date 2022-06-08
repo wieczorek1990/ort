@@ -2,6 +2,7 @@ require 'colorize'
 require 'io/console'
 require 'readline' unless Gem.win_platform?
 require 'socket'
+require 'timeout'
 
 require_relative 'conf'
 require_relative 'console'
@@ -16,6 +17,16 @@ include Translate
 
 
 class Game
+  def get_socket
+    begin
+      Timeout.timeout(@socket_timeout_seconds) do
+          TCPSocket.open(@server, @port)
+      end
+    rescue Errno::ENETUNREACH, Timeout::Error
+      raise Timeout::Error
+    end
+  end
+
   def cheated(play_time, answer_times)
     minimum_seconds_per_round = config 'minimum_seconds_per_round'
     minimum_answer_seconds = config 'minimum_answer_seconds'
@@ -55,7 +66,7 @@ class Game
     position_online_today = nil
     begin
       message = record.to_json
-      socket = TCPSocket.open(@server, @port)
+      socket = get_socket
       socket.puts 'put'
       socket.puts message
       position_online = socket.gets.chomp
@@ -157,6 +168,7 @@ class Game
     @questions_count = config 'questions_count'
     @round_seconds = config "#{'test_' if test}round_seconds"
     @server = config "#{'test_' if test}server"
+    @socket_timeout_seconds = config 'socket_timeout_seconds'
     @records = Record.load @db_file_path
     @test = test
   end
@@ -215,7 +227,7 @@ class Game
   end
 
   def results_online(today = false)
-    socket = TCPSocket.open(@server, @port)
+    socket = get_socket
     socket.puts 'get'
     if today
       socket.puts 'true'
@@ -232,7 +244,7 @@ class Game
 
   def sync
     message = @records.to_json
-    socket = TCPSocket.open(@server, @port)
+    socket = get_socket
     socket.puts 'sync'
     socket.write message
     socket.close
