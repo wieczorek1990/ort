@@ -8,5 +8,5 @@ Metrics/PerceivedComplexity:
   Enabled: false
 Metrics/ClassLength:
   Enabled: false
-Naming/AccessorMethodName
+Naming/AccessorMethodName:
   Enabled: false
