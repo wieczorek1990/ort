@@ -4,18 +4,18 @@ require 'readline' unless Gem.win_platform?
 require 'socket'
 require 'timeout'
 
-require_relative 'conf'
+require_relative 'configuration'
 require_relative 'console'
 require_relative 'enumerable'
 require_relative 'generator'
 require_relative 'record'
 require_relative 'translate'
 
-include Conf
+include Configuration
 include Console
 include Translate
 
-
+# Main game class
 class Game
   def get_socket
     begin

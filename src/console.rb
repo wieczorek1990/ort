@@ -1,7 +1,9 @@
 require 'colorize'
 require 'highline/system_extensions' if Gem.win_platform?
-require 'io/console'
 
+require_relative 'exceptions'
+
+# Terminal operations
 module Console
   def clean_exit
     cursor 'on'
@@ -13,13 +15,15 @@ module Console
     system('clear') || system('cls')
   end
 
-  # TODO: Find Windows equivalent
   def cursor(setting)
+    return if Gem.win_platform?
     case setting
     when 'on'
       system 'tput cnorm'
     when 'off'
       system 'tput civis'
+    else
+      raise Exception 'Invalid value for cursor setting!'
     end
   end
 
@@ -57,14 +61,54 @@ module Console
     end
   end
 
-  def selector(options, extra = {})
-    def prev_choice(choice, last)
-      choice - 1 < 0 ? last : choice - 1
-    end
+  def prev_choice(choice, last)
+    choice - 1 < 0 ? last : choice - 1
+  end
 
-    def next_choice(choice, last)
-      choice + 1 > last ? 0 : choice + 1
+  def next_choice(choice, last)
+    choice + 1 > last ? 0 : choice + 1
+  end
+
+  def get_choice(keystroke, last, choice)
+    if Gem.win_platform?
+      case keystroke
+      # enter, space
+      when 13, 32
+        raise SelectorExit.new(choice)
+      # esc, ctrl+c
+      when 27, 3
+        clean_exit
+      # up
+      when [0, 72], [224, 72]
+        choice = prev_choice(choice, last)
+      # down
+      when [0, 80], [224, 80]
+        choice = next_choice(choice, last)
+      else
+        nil
+      end
+    else
+      case keystroke
+      # enter, space
+      when "\r", ' '
+        raise SelectorExit.new(choice)
+      # esc, ctrl+c
+      when "\e", "\u0003"
+        clean_exit
+      # up
+      when "\e[A"
+        choice = prev_choice(choice, last)
+      # down
+      when "\e[B"
+        choice = next_choice(choice, last)
+      else
+        nil
+      end
     end
+    choice
+  end
+
+  def selector(options, extra = {})
     before = extra[:before].nil? ? '' : extra[:before]
     after = extra[:after].nil? ? '' : extra[:after]
     choice = extra[:choice].nil? ? 0 : extra[:choice]
@@ -81,41 +125,11 @@ module Console
         end
       end
       print after
-      c = read_keystroke
-      if Gem.win_platform?
-        case c
-        # enter, space
-        when 13, 32
-          return choice
-        # esc, ctrl+c
-        when 27, 3
-          clean_exit
-        # up
-        when [0, 72], [224, 72]
-          choice = prev_choice(choice, last)
-        # down
-        when [0, 80], [224, 80]
-          choice = next_choice(choice, last)
-        else
-          nil
-        end
-      else
-        case c
-        # enter, space
-        when "\r", ' '
-          return choice
-        # esc, ctrl+c
-        when "\e", "\u0003"
-          clean_exit
-        # up
-        when "\e[A"
-          choice = prev_choice(choice, last)
-        # down
-        when "\e[B"
-          choice = next_choice(choice, last)
-        else
-          nil
-        end
+      keystroke = read_keystroke
+      begin
+        choice = get_choice(keystroke, last, choice)
+      rescue SelectorExit => e
+        return e.choice
       end
     end
   end

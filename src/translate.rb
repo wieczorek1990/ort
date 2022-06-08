@@ -1,10 +1,11 @@
 require 'colorize'
 require 'yaml'
 
-require_relative 'conf'
+require_relative 'configuration'
 
-include Conf
+include Configuration
 
+# Simple texts loader and translator
 module Translate
   STRINGS = YAML.load_file DATA_PATH + config('language') + '.yml'
 

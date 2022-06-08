@@ -1,6 +1,8 @@
-require_relative 'conf'
-include Conf
+require_relative 'configuration'
 
+include Configuration
+
+# Generation of orts
 class Generator
   CHANGES = {
     'ch' => 'h', 'h' => 'ch',

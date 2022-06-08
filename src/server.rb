@@ -2,14 +2,15 @@ require 'socket'
 require 'time'
 require 'tmpdir'
 
-require_relative 'conf'
+require_relative 'configuration'
 require_relative 'record'
 
-include Conf
+include Configuration
 
+# Server for tables with records
 class Server
-  DB_FILE_PATH = DB_PATH + 'all'
-  LOCK_PATH = Dir.tmpdir + File::SEPARATOR + 'ort.lock'
+  DB_FILE_PATH = "#{DB_PATH}all"
+  LOCK_PATH = "#{Dir.tmpdir}#{File::SEPARATOR}ort.lock"
   MAX_RECORDS_SENT_SIZE = config 'max_records_sent_size'
   PORT = config 'port'
   VERBOSE = config 'server_verbose'
@@ -24,6 +25,7 @@ class Server
 
   def run
     puts "PORT: #{PORT}" if VERBOSE
+    socket = nil
     begin
       Thread.abort_on_exception = true
       socket = TCPServer.open('0.0.0.0', PORT)
@@ -32,7 +34,7 @@ class Server
           begin
             action = client.readline.chomp
             _af, _port, hostname, _addr = client.peeraddr(:hostname)
-            print hostname + ' : ' + action
+            print "#{hostname} : #{action}" if VERBOSE
             case action
             when 'put'
               lock do
@@ -50,7 +52,7 @@ class Server
                 Record.save DB_FILE_PATH, records
               end
             when 'get'
-              filter = client.readline.chomp == 'true' ? true : false
+              filter = client.readline.chomp == 'true'
               records = Record.load DB_FILE_PATH
               records = today(records) if filter
               records = records.take(MAX_RECORDS_SENT_SIZE)
@@ -71,7 +73,7 @@ class Server
             else
               nil
             end
-            puts
+            puts if VERBOSE
           rescue Interrupt => e
             client.close
             raise e
@@ -79,7 +81,7 @@ class Server
         end
       end
     rescue Interrupt
-      socket.close
+      socket.close unless socket.nil?
     end
   end
 

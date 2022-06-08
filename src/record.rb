@@ -1,8 +1,9 @@
 require 'json'
 require 'time'
 
-include Conf
+include Configuration
 
+# Results as records
 class Record
   include Comparable
   attr_reader :name, :time, :good, :bad
