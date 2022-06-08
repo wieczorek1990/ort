@@ -9,8 +9,8 @@ function make_executable_from_source() {
   executable_name="$2"
 
   payload="#!/bin/bash\nruby ${dest}/src/${source_name}"
-  sudo bash -c "echo -e '${payload}' > ${bin}/${executable_name}"
-  sudo chmod +x "$bin/${executable_name}"
+  sudo bash -c "echo -e '$payload' > ${bin}/${executable_name}"
+  sudo chmod +x "${bin}/${executable_name}"
 }
 
 bash $DIR/uninstall.sh
