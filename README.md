@@ -7,11 +7,11 @@ Simple program for Polish ortography learning.
 
 ### ort
 
-Setup `config.sh` with your favourite text editor and run `bash install.sh`.
+Setup `bin/config.sh` with your favourite text editor and run `bash bin/install.sh`.
 
-If you want to install the results server, run `bash install.sh server`.
+If you want to install the results server, run `bash bin/install.sh server`.
 
-To uninstall run `bash uninstall.sh`.
+To uninstall run `bash bin/uninstall.sh`.
 
 ## Launching
 
@@ -40,16 +40,12 @@ Results databases are stored in `~/.ort-db` directory.
 You can edit the `data/pl_PL.dic` dictionary if you think that ~300k
 words is too much or need a specific set of words.
 
-To download newer version of dictionary run `bash update_dic.sh`.
+To download newer version of dictionary run `bash bin/dictionary.sh`.
 
 ## Localization
 
 If you want to localize **ort**, create a `$language.yml` file and send a
 pull request.
-
-## Portability
-
-**ort** should work with Ruby 1.9.3+ under Linux or Windows.
 
 ---
 
@@ -62,17 +58,17 @@ Prosty program do nauki polskiej ortografii.
 
 ### ort
 
-Ustaw `config.sh` ulubionym edytorem tekstowym i uruchom `bash install.sh`.
+Ustaw `bin/config.sh` ulubionym edytorem tekstowym i uruchom `bash bin/install.sh`.
 
-Jeżeli chcesz zainstalować serwer wyników uruchom `bash install.sh server`.
+Jeżeli chcesz zainstalować serwer wyników uruchom `bash bin/install.sh server`.
 
-By odinstalować uruchom `bash uninstall.sh`.
+By odinstalować uruchom `bash bin/uninstall.sh`.
 
 ## Uruchamianie
 
 Uruchom program w terminalu przez `ort`.
 
-Uruchom serwer w terminalu przez `ort`.
+Uruchom serwer w terminalu przez `ort_server`.
 
 ## Ustawienia klawiatury
 
@@ -94,12 +90,8 @@ Bazy danych wyników przechowywane są w katalogu `~/.ort-db`.
 
 Możesz edytować słownik `data/pl_PL.dic`, jeżeli uważasz że ~300k słów to za dużo lub potrzebujesz specyficznego zbioru słów.
 
-By ściągnąć nowszą wersję słownika uruchom `bash update_dic.sh`.
+By ściągnąć nowszą wersję słownika uruchom `bash bin/dictionary.sh`.
 
 ## Lokalizacja
 
 Jeżeli chcesz przetłumaczyć **ort**, utwórz plik `$język.yml` i wyślij pull request.
-
-## Przenośność
-
-**ort** powienien działać z Ruby 1.9.3+ pod Linux i Windows.
