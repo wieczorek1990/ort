@@ -15,9 +15,9 @@ To uninstall run `bash uninstall.sh`.
 
 ## Launching
 
-Launch program in terminal by `ortografia`.
+Launch program in terminal by `ort`.
 
-Launch server in terminal by `ortografia_server`.
+Launch server in terminal by `ort_server`.
 
 ## Keyboard settings
 
@@ -70,9 +70,9 @@ By odinstalować uruchom `bash uninstall.sh`.
 
 ## Uruchamianie
 
-Uruchom program w terminalu przez `ortografia`.
+Uruchom program w terminalu przez `ort`.
 
-Uruchom serwer w terminalu przez `ortografia_server`.
+Uruchom serwer w terminalu przez `ort`.
 
 ## Ustawienia klawiatury
 
