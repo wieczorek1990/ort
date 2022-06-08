@@ -2,6 +2,6 @@
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-src=$DIR
+src="$DIR"
 dest=/opt/ort
 bin=/usr/local/bin

@@ -1,4 +1,4 @@
 require_relative 'game'
 
-TEST = ARGV[0] == 'test' ? true : false
-Game.new(TEST).run
+is_test_mode = ARGV[0] == 'test' ? true : false
+Game.new(is_test_mode).run

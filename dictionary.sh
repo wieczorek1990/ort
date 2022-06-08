@@ -1,12 +1,13 @@
 #!/bin/bash
 
-# Needs wget, sponge from moreutils and gsed from gnu-sed
+# Needs wget, sponge, gsed
+# On MacOS: brew install sponge
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 tmp=$(mktemp -d)
 cd "$tmp"
-wget -rq --no-parent --no-directories -A 'sjp-myspell-pl-*.zip' http://sjp.pl/slownik/ort/
+wget -qr --no-parent --no-directories -A 'sjp-myspell-pl-*.zip' https://sjp.pl/sl/ort/
 unzip -q sjp-myspell-pl*.zip
 unzip -q pl_PL.zip
 iconv -f ISO-8859-2 -t UTF-8 pl_PL.dic | sponge pl_PL.dic
