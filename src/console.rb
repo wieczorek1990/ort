@@ -23,31 +23,35 @@ module Console
     end
   end
 
-  def read_char
+  def get_character
     if Gem.win_platform?
-      multibyte_char = []
-      multibyte_char << HighLine::SystemExtensions.get_character
-      if [0, 224].include? multibyte_char[0]
-        multibyte_char << HighLine::SystemExtensions.get_character
-      end
-      multibyte_char = multibyte_char[0] if multibyte_char.size == 1
-      multibyte_char
+      HighLine::SystemExtensions.get_character
     else
-      # TODO: Find another method
-      begin
-        STDIN.echo = false
-        STDIN.raw!
-        input = STDIN.getc.chr
-        if input == "\e"
-          begin
-            input << STDIN.read_nonblock(3)
-          rescue nil
-            nil
-          end
+      STDIN.getch
+    end
+  end
+
+  def read_keystroke
+    if Gem.win_platform?
+      input = []
+      character = get_character
+      input << character
+      if [0, 224].include? character
+        input << get_character
+      end
+      if input.size == 1
+        character
+      else
+        input
+      end
+    else
+      input = get_character
+      if input == "\e"
+        begin
+          input << STDIN.read_nonblock(3)
+        rescue nil
+          nil
         end
-      ensure
-        STDIN.echo = true
-        STDIN.cooked!
       end
       input
     end
@@ -77,7 +81,7 @@ module Console
         end
       end
       print after
-      c = read_char
+      c = read_keystroke
       if Gem.win_platform?
         case c
         # enter, space

@@ -55,7 +55,7 @@ class Game
       end
       loop do
         # ctrl+\
-        clean_exit if read_char == 28
+        clean_exit if read_keystroke == 28
       end
     end
     record = Record.new(name, stop, good, bad)
@@ -186,7 +186,7 @@ class Game
   def press_any_key_to_continue
     print t('press_any_key_to_continue')
     cursor 'on'
-    read_char
+    read_keystroke
     cursor 'off'
   end
 
