@@ -1,4 +1,4 @@
-require_relative 'game'
+require_relative 'games'
 
 is_test_mode = ARGV[0] == 'test'
-Game.new(is_test_mode).run
+StandardTerminalGame.new(is_test_mode).run

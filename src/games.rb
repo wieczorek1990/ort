@@ -17,12 +17,34 @@ include Translate
 
 # Main game class
 class Game
+  def initialize(test)
+    @test = test
+    super()
+  end
+
   def get_socket
     Timeout.timeout(@socket_timeout_seconds) do
       TCPSocket.open(@server, @port)
     end
   rescue Errno::ENETUNREACH, Errno::ECONNREFUSED, Timeout::Error
     raise NoConnection
+  end
+end
+
+# A typical game for a standard terminal
+class StandardTerminalGame < Game
+  def initialize(test)
+    @db_file_path = DB_PATH + Socket.gethostname
+    @max_form_size = config 'max_form_size'
+    @min_form_size = config 'min_form_size'
+    @trunc_form_size = config 'trunc_form_size'
+    @port = config 'port'
+    @questions_count = config 'questions_count'
+    @round_seconds = config "#{'test_' if test}round_seconds"
+    @server = config "#{'test_' if test}server"
+    @socket_timeout_seconds = config 'socket_timeout_seconds'
+    @records = Record.load @db_file_path
+    super(test)
   end
 
   def cheated(play_time)
@@ -159,20 +181,6 @@ class Game
       press_any_key_to_continue
     end
     end_game name, start
-  end
-
-  def initialize(test)
-    @db_file_path = DB_PATH + Socket.gethostname
-    @max_form_size = config 'max_form_size'
-    @min_form_size = config 'min_form_size'
-    @trunc_form_size = config 'trunc_form_size'
-    @port = config 'port'
-    @questions_count = config 'questions_count'
-    @round_seconds = config "#{'test_' if test}round_seconds"
-    @server = config "#{'test_' if test}server"
-    @socket_timeout_seconds = config 'socket_timeout_seconds'
-    @records = Record.load @db_file_path
-    @test = test
   end
 
   def no_connection(error)
