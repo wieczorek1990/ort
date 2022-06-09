@@ -1,4 +1,6 @@
-Metrics/MethodLength:
+AllCops:
+  NewCops: enable
+Layout/EmptyLineAfterGuardClause:
   Enabled: false
 Metrics/AbcSize:
   Enabled: false
@@ -8,5 +10,17 @@ Metrics/PerceivedComplexity:
   Enabled: false
 Metrics/ClassLength:
   Enabled: false
+Metrics/MethodLength:
+  Enabled: false
+Metrics/ModuleLength:
+  Enabled: false
 Naming/AccessorMethodName:
+  Enabled: false
+Security/MarshalLoad:
+  Enabled: false
+Style/FormatString:
+  Enabled: false
+Style/FrozenStringLiteralComment:
+  Enabled: false
+Style/MixinUsage:
   Enabled: false
