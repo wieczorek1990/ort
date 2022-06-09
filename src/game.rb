@@ -1,5 +1,4 @@
 require 'colorize'
-require 'io/console'
 require 'readline' unless Gem.win_platform?
 require 'socket'
 require 'timeout'

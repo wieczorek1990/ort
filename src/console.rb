@@ -1,5 +1,6 @@
 require 'colorize'
 require 'highline/system_extensions' if Gem.win_platform?
+require 'io/console'
 
 require_relative 'exceptions'
 
