@@ -46,20 +46,19 @@ class Record
 
   def self.save(db_path, records)
     Dir.mkdir DB_PATH unless Dir.exist? DB_PATH
-    File.open(db_path, 'wb') do |f|
-      f.write(Marshal.dump(records))
-    end
+    File.binwrite(db_path, Marshal.dump(records))
   end
 
   def to_json(options = {})
-    {:name => @name, :time => @time,
-     :good => @good, :bad => @bad
+    {
+      name: @name, time: @time,
+      good: @good, bad: @bad
     }.to_json(options)
   end
 
   def self.from_json(string)
     result = []
-    data = JSON.restore string
+    data = JSON.parse string
     data = [data] if data.is_a? Hash
     data.each do |item|
       result << new(item['name'],

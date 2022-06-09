@@ -8,11 +8,11 @@ class Generator
     'ch' => 'h', 'h' => 'ch',
     'ż' => 'rz', 'rz' => 'ż',
     'ó' => 'u', 'u' => 'ó'
-  }
+  }.freeze
   SINGLES = CHANGES.keys.select { |c| c.length == 1 }
   CLUSTERS = CHANGES.keys.select { |c| c.length == 2 }
-  BIG = %w(Ą Ć Ę Ł Ń Ó Ś Ż Ź)
-  DICT = File.readlines(DATA_PATH + 'pl_PL.dic', encoding: 'utf-8')
+  BIG = %w[Ą Ć Ę Ł Ń Ó Ś Ż Ź].freeze
+  DICT = File.readlines("#{DATA_PATH}pl_PL.dic", encoding: 'utf-8')
   ORT_MAX = config 'ort_max'
 
   def self.sample_word
@@ -20,7 +20,7 @@ class Generator
   end
 
   def self.gen_forms(word)
-    capitalized = (!(/[A-Z]/ =~ word[0]).nil?) || BIG.include?(word[0])
+    capitalized = !(/[A-Z]/ =~ word[0]).nil? || BIG.include?(word[0])
     w = word.downcase
     result = []
     tokens = []
@@ -47,9 +47,9 @@ class Generator
       end
     end
     orts_size = orts.size
-    orts_size = orts_size > ORT_MAX ? ORT_MAX : orts_size
+    orts_size = ORT_MAX if orts_size > ORT_MAX
     orts = orts.shuffle!.first(orts_size)
-    (0...2**orts_size).each do |i|
+    (0...(2**orts_size)).each do |i|
       ort_no = 0
       t = tokens.clone
       (0..orts_size).map { |k| 2**k }.each do |j|
@@ -59,7 +59,7 @@ class Generator
         end
         ort_no += 1
       end
-      result << t.join('')
+      result << t.join
     end
     result.map!(&:capitalize) if capitalized
     result.shuffle

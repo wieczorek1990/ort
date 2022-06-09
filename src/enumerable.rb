@@ -1,3 +1,4 @@
+# Help for statistics
 module Enumerable
   def sum
     inject(0, &:+)
@@ -9,7 +10,7 @@ module Enumerable
 
   def sample_variance
     m = mean
-    sum = inject(0) { |accum, i| accum + (i - m)**2 }
+    sum = inject(0) { |accum, i| accum + ((i - m)**2) }
     sum / (length - 1).to_f
   end
 

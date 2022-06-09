@@ -7,7 +7,7 @@ include Configuration
 
 # Simple texts loader and translator
 module Translate
-  STRINGS = YAML.load_file DATA_PATH + config('language') + '.yml'
+  STRINGS = YAML.load_file "#{DATA_PATH}#{config('language')}.yml"
 
   def t(key, options = {})
     args = options.key?(:args) ? options[:args] : []

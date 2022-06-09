@@ -23,7 +23,7 @@ module Console
     when 'off'
       system 'tput civis'
     else
-      raise Exception 'Invalid value for cursor setting!'
+      raise StandardError 'Invalid value for cursor setting!'
     end
   end
 
@@ -31,7 +31,7 @@ module Console
     if Gem.win_platform?
       HighLine::SystemExtensions.get_character
     else
-      STDIN.getch
+      $stdin.getch
     end
   end
 
@@ -40,9 +40,7 @@ module Console
       input = []
       character = get_character
       input << character
-      if [0, 224].include? character
-        input << get_character
-      end
+      input << get_character if [0, 224].include? character
       if input.size == 1
         character
       else
@@ -52,8 +50,8 @@ module Console
       input = get_character
       if input == "\e"
         begin
-          input << STDIN.read_nonblock(3)
-        rescue nil
+          input << $stdin.read_nonblock(3)
+        rescue StandardError
           nil
         end
       end
@@ -62,7 +60,7 @@ module Console
   end
 
   def prev_choice(choice, last)
-    choice - 1 < 0 ? last : choice - 1
+    (choice - 1).negative? ? last : choice - 1
   end
 
   def next_choice(choice, last)
@@ -74,7 +72,7 @@ module Console
       case keystroke
       # enter, space
       when 13, 32
-        raise SelectorExit.new(choice)
+        raise SelectorExit, choice
       # esc, ctrl+c
       when 27, 3
         clean_exit
@@ -84,14 +82,12 @@ module Console
       # down
       when [0, 80], [224, 80]
         choice = next_choice(choice, last)
-      else
-        nil
       end
     else
       case keystroke
       # enter, space
       when "\r", ' '
-        raise SelectorExit.new(choice)
+        raise SelectorExit, choice
       # esc, ctrl+c
       when "\e", "\u0003"
         clean_exit
@@ -101,8 +97,6 @@ module Console
       # down
       when "\e[B"
         choice = next_choice(choice, last)
-      else
-        nil
       end
     end
     choice
@@ -118,10 +112,10 @@ module Console
       print before
       options.each_with_index do |line, i|
         line = line.yellow
-        if i != choice
-          puts line
-        else
+        if i == choice
           puts line.swap
+        else
+          puts line
         end
       end
       print after
