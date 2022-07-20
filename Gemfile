@@ -2,8 +2,6 @@ source 'https://rubygems.org'
 
 gem 'colorize'
 
-platforms :mswin do
-  gem 'highline'
-end
+gem 'highline', platforms: [:mswin, :mingw]
 
 gem 'rubocop', require: false
