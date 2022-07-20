@@ -136,11 +136,11 @@ class StandardTerminalGame < Game
   def construct_forms(question_no, seconds_left)
     forms = []
     loop do
-      word = Generator.sample_word
-      forms = Generator.gen_forms(word)
+      @word = Generator.sample_word
+      forms = Generator.gen_forms(@word)
       forms = forms.take(@max_form_size)
       if forms.size >= @min_form_size
-        forms[rand(forms.length)] = word unless forms.include?(word)
+        forms[rand(forms.length)] = @word unless forms.include?(@word)
         break
       end
     end
@@ -169,7 +169,6 @@ class StandardTerminalGame < Game
     @questions_count.times do |question_no|
       seconds_left = @round_seconds - (Time.now - start)
       break if seconds_left <= 0
-      @word = ''
       forms, answer = construct_forms question_no, seconds_left
       if forms[answer] == @word
         puts t('correct')

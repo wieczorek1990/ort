@@ -1,6 +1,5 @@
 require 'colorize'
-require 'highline/system_extensions' if Gem.win_platform?
-require 'io/console'
+require 'io/console' 
 
 require_relative 'exceptions'
 
@@ -28,36 +27,16 @@ module Console
     end
   end
 
-  def get_character
-    if Gem.win_platform?
-      HighLine::SystemExtensions.get_character
-    else
-      $stdin.getch
-    end
-  end
-
   def read_keystroke
-    if Gem.win_platform?
-      input = []
-      character = get_character
-      input << character
-      input << get_character if [0, 224].include? character
-      if input.size == 1
-        character
-      else
-        input
+    input = $stdin.getch
+    if input == "\e" or input.ord == 224
+      begin
+        input << $stdin.read_nonblock(3)
+      rescue StandardError
+        nil
       end
-    else
-      input = get_character
-      if input == "\e"
-        begin
-          input << $stdin.read_nonblock(3)
-        rescue StandardError
-          nil
-        end
-      end
-      input
     end
+    input
   end
 
   def prev_choice(choice, last)
@@ -69,36 +48,24 @@ module Console
   end
 
   def get_choice(keystroke, last, choice)
+    case keystroke
+    # enter, space
+    when "\r", ' '
+      raise SelectorExit, choice
+    # esc, ctrl+c
+    when "\e", "\u0003"
+      clean_exit
+    end
     if Gem.win_platform?
-      case keystroke
-      # enter, space
-      when 13, 32
-        raise SelectorExit, choice
-      # esc, ctrl+c
-      when 27, 3
-        clean_exit
-      # up
-      when [0, 72], [224, 72]
-        choice = prev_choice(choice, last)
-      # down
-      when [0, 80], [224, 80]
-        choice = next_choice(choice, last)
-      end
-    else
-      case keystroke
-      # enter, space
-      when "\r", ' '
-        raise SelectorExit, choice
-      # esc, ctrl+c
-      when "\e", "\u0003"
-        clean_exit
-      # up
-      when "\e[A"
-        choice = prev_choice(choice, last)
-      # down
-      when "\e[B"
-        choice = next_choice(choice, last)
-      end
+      keystroke = keystroke.each_char.map {|char| char.ord}
+    end
+    case keystroke
+    # up
+    when "\e[A", [224, 72]
+      choice = prev_choice(choice, last)
+    # down
+    when "\e[B", [224, 80]
+      choice = next_choice(choice, last)
     end
     choice
   end
