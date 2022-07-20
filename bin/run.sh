@@ -1,4 +1,4 @@
 #!/bin/bash
 
-bundle exec ruby src/ort.rb
+bundle exec ruby src/ort.rb "$@"
 
