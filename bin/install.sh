@@ -14,6 +14,8 @@ function make_executable_from_source() {
 }
 
 bash $DIR/uninstall.sh
+sudo gem install bundler
+bundle install
 sudo cp -r "$src" "$dest"
 make_executable_from_source ort.rb "$ort_name"
 if [ "$1" == 'server' ]
