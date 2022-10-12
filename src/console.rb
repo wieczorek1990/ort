@@ -16,7 +16,6 @@ module Console
   end
 
   def cursor(setting)
-    return if Gem.win_platform?
     case setting
     when 'on'
       system 'tput cnorm'
@@ -55,9 +54,6 @@ module Console
     # esc, ctrl+c
     when "\e", "\u0003"
       clean_exit
-    end
-    if Gem.win_platform?
-      keystroke = keystroke.each_char.map {|char| char.ord}
     end
     case keystroke
     # up

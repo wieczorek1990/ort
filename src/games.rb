@@ -1,5 +1,5 @@
 require 'colorize'
-require 'readline' unless Gem.win_platform?
+require 'readline'
 require 'socket'
 require 'timeout'
 
@@ -112,15 +112,10 @@ class StandardTerminalGame < Game
       cursor 'on'
       prompt = t('nickname_prompt')
       begin
-        if Gem.win_platform?
-          print prompt
-          name = $stdin.gets.chomp
-        else
-          begin
-            name = Readline.readline("#{prompt}\e[33m") # yellow
-          ensure
-            printf "\e[0m" # terminator
-          end
+        begin
+          name = Readline.readline("#{prompt}\e[33m") # yellow
+        ensure
+          printf "\e[0m" # terminator
         end
       rescue StandardError
         clean_exit
