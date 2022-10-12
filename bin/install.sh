@@ -8,7 +8,7 @@ function make_executable_from_source() {
   source_name="$1"
   executable_name="$2"
 
-  payload="#!/bin/bash\nruby ${dest}/src/${source_name}"
+  payload="#!/bin/bash\nruby ${dest}/src/${source_name} $@"
   sudo bash -c "echo -e '$payload' > ${bin}/${executable_name}"
   sudo chmod +x "${bin}/${executable_name}"
 }
