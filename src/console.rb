@@ -12,7 +12,7 @@ module Console
   end
 
   def clear
-    system('clear') || system('cls')
+    system('clear')
   end
 
   def cursor(setting)
